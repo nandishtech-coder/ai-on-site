@@ -1,0 +1,2 @@
+REVOKE ALL ON FUNCTION public.match_site_chunks(UUID, VECTOR(1536), INTEGER) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.match_site_chunks(UUID, VECTOR(1536), INTEGER) TO service_role;
