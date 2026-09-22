@@ -14,13 +14,221 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bots: {
+        Row: {
+          avatar_key: string
+          crawl_error: string | null
+          crawl_stage: string | null
+          crawl_status: string
+          created_at: string
+          domain: string
+          greeting_message: string
+          id: string
+          is_active: boolean
+          last_crawled_at: string | null
+          lead_capture_enabled: boolean
+          message_count: number
+          name: string
+          notification_email: string | null
+          pages_crawled: number
+          plan: string
+          primary_color: string
+          show_branding: boolean
+          system_prompt: string | null
+          user_id: string
+        }
+        Insert: {
+          avatar_key?: string
+          crawl_error?: string | null
+          crawl_stage?: string | null
+          crawl_status?: string
+          created_at?: string
+          domain: string
+          greeting_message?: string
+          id?: string
+          is_active?: boolean
+          last_crawled_at?: string | null
+          lead_capture_enabled?: boolean
+          message_count?: number
+          name?: string
+          notification_email?: string | null
+          pages_crawled?: number
+          plan?: string
+          primary_color?: string
+          show_branding?: boolean
+          system_prompt?: string | null
+          user_id: string
+        }
+        Update: {
+          avatar_key?: string
+          crawl_error?: string | null
+          crawl_stage?: string | null
+          crawl_status?: string
+          created_at?: string
+          domain?: string
+          greeting_message?: string
+          id?: string
+          is_active?: boolean
+          last_crawled_at?: string | null
+          lead_capture_enabled?: boolean
+          message_count?: number
+          name?: string
+          notification_email?: string | null
+          pages_crawled?: number
+          plan?: string
+          primary_color?: string
+          show_branding?: boolean
+          system_prompt?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      conversations: {
+        Row: {
+          answered_count: number
+          bot_id: string
+          created_at: string
+          id: string
+          messages: Json
+          updated_at: string
+          visitor_email: string | null
+        }
+        Insert: {
+          answered_count?: number
+          bot_id: string
+          created_at?: string
+          id?: string
+          messages?: Json
+          updated_at?: string
+          visitor_email?: string | null
+        }
+        Update: {
+          answered_count?: number
+          bot_id?: string
+          created_at?: string
+          id?: string
+          messages?: Json
+          updated_at?: string
+          visitor_email?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          bot_id: string
+          conversation_id: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string | null
+          phone: string | null
+          question: string | null
+        }
+        Insert: {
+          bot_id: string
+          conversation_id?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string | null
+          phone?: string | null
+          question?: string | null
+        }
+        Update: {
+          bot_id?: string
+          conversation_id?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string | null
+          phone?: string | null
+          question?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      site_chunks: {
+        Row: {
+          bot_id: string
+          content: string
+          created_at: string
+          embedding: string | null
+          id: string
+          source: string
+          title: string | null
+          url: string
+        }
+        Insert: {
+          bot_id: string
+          content: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          source?: string
+          title?: string | null
+          url: string
+        }
+        Update: {
+          bot_id?: string
+          content?: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          source?: string
+          title?: string | null
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_chunks_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      match_site_chunks: {
+        Args: {
+          match_count?: number
+          p_bot_id: string
+          query_embedding: string
+        }
+        Returns: {
+          content: string
+          id: string
+          similarity: number
+          title: string
+          url: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
