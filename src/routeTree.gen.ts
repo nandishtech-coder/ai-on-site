@@ -12,11 +12,19 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BlogRouteImport } from './routes/blog'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
+import { Route as DashboardBillingRouteImport } from './routes/dashboard.billing'
 import { Route as SolutionsSlugRouteImport } from './routes/solutions.$slug'
 import { Route as ApiPublicChatRouteImport } from './routes/api/public/chat'
+import { Route as DashboardBotBotIdIndexRouteImport } from './routes/dashboard.bot.$botId.index'
+import { Route as DashboardBotBotIdCustomizeRouteImport } from './routes/dashboard.bot.$botId.customize'
+import { Route as DashboardBotBotIdEmbedRouteImport } from './routes/dashboard.bot.$botId.embed'
+import { Route as DashboardBotBotIdInboxRouteImport } from './routes/dashboard.bot.$botId.inbox'
+import { Route as DashboardBotBotIdLeadsRouteImport } from './routes/dashboard.bot.$botId.leads'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -31,6 +39,11 @@ const AuthRoute = AuthRouteImport.update({
 const BlogRoute = BlogRouteImport.update({
   id: '/blog',
   path: '/blog',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FeaturesRoute = FeaturesRouteImport.update({
@@ -48,6 +61,16 @@ const PricingRoute = PricingRouteImport.update({
   path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardBillingRoute = DashboardBillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const SolutionsSlugRoute = SolutionsSlugRouteImport.update({
   id: '/solutions/$slug',
   path: '/solutions/$slug',
@@ -58,16 +81,50 @@ const ApiPublicChatRoute = ApiPublicChatRouteImport.update({
   path: '/api/public/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardBotBotIdIndexRoute = DashboardBotBotIdIndexRouteImport.update({
+  id: '/bot/$botId/',
+  path: '/bot/$botId/',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardBotBotIdCustomizeRoute =
+  DashboardBotBotIdCustomizeRouteImport.update({
+    id: '/bot/$botId/customize',
+    path: '/bot/$botId/customize',
+    getParentRoute: () => DashboardRoute,
+  } as any)
+const DashboardBotBotIdEmbedRoute = DashboardBotBotIdEmbedRouteImport.update({
+  id: '/bot/$botId/embed',
+  path: '/bot/$botId/embed',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardBotBotIdInboxRoute = DashboardBotBotIdInboxRouteImport.update({
+  id: '/bot/$botId/inbox',
+  path: '/bot/$botId/inbox',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardBotBotIdLeadsRoute = DashboardBotBotIdLeadsRouteImport.update({
+  id: '/bot/$botId/leads',
+  path: '/bot/$botId/leads',
+  getParentRoute: () => DashboardRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/blog': typeof BlogRoute
+  '/dashboard': typeof DashboardRouteWithChildren
   '/features': typeof FeaturesRoute
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
+  '/dashboard/billing': typeof DashboardBillingRoute
   '/solutions/$slug': typeof SolutionsSlugRoute
+  '/dashboard/': typeof DashboardIndexRoute
   '/api/public/chat': typeof ApiPublicChatRoute
+  '/dashboard/bot/$botId/customize': typeof DashboardBotBotIdCustomizeRoute
+  '/dashboard/bot/$botId/embed': typeof DashboardBotBotIdEmbedRoute
+  '/dashboard/bot/$botId/inbox': typeof DashboardBotBotIdInboxRoute
+  '/dashboard/bot/$botId/leads': typeof DashboardBotBotIdLeadsRoute
+  '/dashboard/bot/$botId/': typeof DashboardBotBotIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -76,19 +133,34 @@ export interface FileRoutesByTo {
   '/features': typeof FeaturesRoute
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
+  '/dashboard/billing': typeof DashboardBillingRoute
   '/solutions/$slug': typeof SolutionsSlugRoute
+  '/dashboard': typeof DashboardIndexRoute
   '/api/public/chat': typeof ApiPublicChatRoute
+  '/dashboard/bot/$botId/customize': typeof DashboardBotBotIdCustomizeRoute
+  '/dashboard/bot/$botId/embed': typeof DashboardBotBotIdEmbedRoute
+  '/dashboard/bot/$botId/inbox': typeof DashboardBotBotIdInboxRoute
+  '/dashboard/bot/$botId/leads': typeof DashboardBotBotIdLeadsRoute
+  '/dashboard/bot/$botId': typeof DashboardBotBotIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/blog': typeof BlogRoute
+  '/dashboard': typeof DashboardRouteWithChildren
   '/features': typeof FeaturesRoute
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
+  '/dashboard/billing': typeof DashboardBillingRoute
   '/solutions/$slug': typeof SolutionsSlugRoute
+  '/dashboard/': typeof DashboardIndexRoute
   '/api/public/chat': typeof ApiPublicChatRoute
+  '/dashboard/bot/$botId/customize': typeof DashboardBotBotIdCustomizeRoute
+  '/dashboard/bot/$botId/embed': typeof DashboardBotBotIdEmbedRoute
+  '/dashboard/bot/$botId/inbox': typeof DashboardBotBotIdInboxRoute
+  '/dashboard/bot/$botId/leads': typeof DashboardBotBotIdLeadsRoute
+  '/dashboard/bot/$botId/': typeof DashboardBotBotIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -96,11 +168,19 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/blog'
+    | '/dashboard'
     | '/features'
     | '/onboarding'
     | '/pricing'
+    | '/dashboard/billing'
     | '/solutions/$slug'
+    | '/dashboard/'
     | '/api/public/chat'
+    | '/dashboard/bot/$botId/customize'
+    | '/dashboard/bot/$botId/embed'
+    | '/dashboard/bot/$botId/inbox'
+    | '/dashboard/bot/$botId/leads'
+    | '/dashboard/bot/$botId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -109,24 +189,40 @@ export interface FileRouteTypes {
     | '/features'
     | '/onboarding'
     | '/pricing'
+    | '/dashboard/billing'
     | '/solutions/$slug'
+    | '/dashboard'
     | '/api/public/chat'
+    | '/dashboard/bot/$botId/customize'
+    | '/dashboard/bot/$botId/embed'
+    | '/dashboard/bot/$botId/inbox'
+    | '/dashboard/bot/$botId/leads'
+    | '/dashboard/bot/$botId'
   id:
     | '__root__'
     | '/'
     | '/auth'
     | '/blog'
+    | '/dashboard'
     | '/features'
     | '/onboarding'
     | '/pricing'
+    | '/dashboard/billing'
     | '/solutions/$slug'
+    | '/dashboard/'
     | '/api/public/chat'
+    | '/dashboard/bot/$botId/customize'
+    | '/dashboard/bot/$botId/embed'
+    | '/dashboard/bot/$botId/inbox'
+    | '/dashboard/bot/$botId/leads'
+    | '/dashboard/bot/$botId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
   BlogRoute: typeof BlogRoute
+  DashboardRoute: typeof DashboardRouteWithChildren
   FeaturesRoute: typeof FeaturesRoute
   OnboardingRoute: typeof OnboardingRoute
   PricingRoute: typeof PricingRoute
@@ -157,6 +253,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BlogRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/features': {
       id: '/features'
       path: '/features'
@@ -178,6 +281,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/billing': {
+      id: '/dashboard/billing'
+      path: '/billing'
+      fullPath: '/dashboard/billing'
+      preLoaderRoute: typeof DashboardBillingRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/solutions/$slug': {
       id: '/solutions/$slug'
       path: '/solutions/$slug'
@@ -192,13 +309,73 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicChatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/bot/$botId/': {
+      id: '/dashboard/bot/$botId/'
+      path: '/bot/$botId'
+      fullPath: '/dashboard/bot/$botId/'
+      preLoaderRoute: typeof DashboardBotBotIdIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/bot/$botId/customize': {
+      id: '/dashboard/bot/$botId/customize'
+      path: '/bot/$botId/customize'
+      fullPath: '/dashboard/bot/$botId/customize'
+      preLoaderRoute: typeof DashboardBotBotIdCustomizeRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/bot/$botId/embed': {
+      id: '/dashboard/bot/$botId/embed'
+      path: '/bot/$botId/embed'
+      fullPath: '/dashboard/bot/$botId/embed'
+      preLoaderRoute: typeof DashboardBotBotIdEmbedRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/bot/$botId/inbox': {
+      id: '/dashboard/bot/$botId/inbox'
+      path: '/bot/$botId/inbox'
+      fullPath: '/dashboard/bot/$botId/inbox'
+      preLoaderRoute: typeof DashboardBotBotIdInboxRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/bot/$botId/leads': {
+      id: '/dashboard/bot/$botId/leads'
+      path: '/bot/$botId/leads'
+      fullPath: '/dashboard/bot/$botId/leads'
+      preLoaderRoute: typeof DashboardBotBotIdLeadsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
   }
 }
+
+interface DashboardRouteChildren {
+  DashboardBillingRoute: typeof DashboardBillingRoute
+  DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardBotBotIdCustomizeRoute: typeof DashboardBotBotIdCustomizeRoute
+  DashboardBotBotIdEmbedRoute: typeof DashboardBotBotIdEmbedRoute
+  DashboardBotBotIdInboxRoute: typeof DashboardBotBotIdInboxRoute
+  DashboardBotBotIdLeadsRoute: typeof DashboardBotBotIdLeadsRoute
+  DashboardBotBotIdIndexRoute: typeof DashboardBotBotIdIndexRoute
+}
+
+const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardBillingRoute: DashboardBillingRoute,
+  DashboardIndexRoute: DashboardIndexRoute,
+  DashboardBotBotIdCustomizeRoute: DashboardBotBotIdCustomizeRoute,
+  DashboardBotBotIdEmbedRoute: DashboardBotBotIdEmbedRoute,
+  DashboardBotBotIdInboxRoute: DashboardBotBotIdInboxRoute,
+  DashboardBotBotIdLeadsRoute: DashboardBotBotIdLeadsRoute,
+  DashboardBotBotIdIndexRoute: DashboardBotBotIdIndexRoute,
+}
+
+const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
+  DashboardRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   BlogRoute: BlogRoute,
+  DashboardRoute: DashboardRouteWithChildren,
   FeaturesRoute: FeaturesRoute,
   OnboardingRoute: OnboardingRoute,
   PricingRoute: PricingRoute,
