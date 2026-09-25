@@ -262,6 +262,7 @@ export async function textFromScripts(origin: string, startUrl: string): Promise
       if (/\b(flex|px-\d|py-\d|text-(xs|sm|lg)|bg-|rounded|grid-cols|w-\d|h-\d|items-center)\b/.test(s)) continue;
       const letters = s.replace(/[^A-Za-z\u00C0-\uFFFF]/g, "").length;
       if (letters / s.length < 0.6) continue;
+      if (/^(something went wrong|not found|page not found|go home|try again|sign out|this page didn't load)/i.test(s) || /doesn't exist or has been moved|went wrong on our end/i.test(s)) continue;
       lines.add(s);
     }
   }
