@@ -202,7 +202,71 @@ export async function crawlSite(
     }
   }
 
+  // Script-built sites keep their words inside their code files. Read them there.
+  const total = pages.reduce((n, p) => n + p.text.length, 0);
+  if (total < pages.length * 800 + 400) {
+    const bundle = await textFromScripts(origin, startUrl);
+    if (bundle.length > 200) {
+      pages.push({ url: `${origin}/`, title: "Full website content", text: bundle });
+      onProgress?.(pages.length);
+    }
+  }
+
   return pages;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _JUNK = /error|invalid|abort|token|session|webauthn|reconnect|undefined|null|failed|cannot|must be|expected|deprecated|supabase|localstorage|iframe|polyfill|http|\.js|\.css|=>|function|return |\{|\}|\\/i;
+
+async function fetchRaw(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url, { redirect: "follow", signal: AbortSignal.timeout(15000) });
+    return res.ok ? await res.text() : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function textFromScripts(origin: string, startUrl: string): Promise<string> {
+  const html = (await fetchRaw(startUrl)) ?? "";
+  const scripts = new Set<string>();
+  for (const m of html.matchAll(/(?:src|href)=["']([^"']+\.m?js)["']/gi)) {
+    try {
+      const u = new URL(m[1]!, startUrl);
+      if (u.origin === origin) scripts.add(u.href);
+    } catch {
+      /* skip */
+    }
+  }
+  const queue = [...scripts];
+  const lines = new Set<string>();
+  let fetched = 0;
+  while (queue.length && fetched < 80) {
+    const src = queue.shift()!;
+    fetched++;
+    const js = await fetchRaw(src);
+    if (!js) continue;
+    // follow lazily loaded chunks (other pages/sections)
+    for (const m of js.matchAll(/["'`](?:\.\/|\/assets\/)([\w.-]+\.js)["'`]/g)) {
+      const u = new URL(m[0].includes("/assets/") ? `/assets/${m[1]}` : m[1]!, src).href;
+      if (!scripts.has(u)) {
+        scripts.add(u);
+        queue.push(u);
+      }
+    }
+    const re = /(?:children|title|description|desc|text|label|subtitle|heading|question|answer|quote|content|summary|tagline|body|caption|name|role|price|features?|placeholder)\s*:\s*"((?:[^"\\\n]|\\.){3,800})"/g;
+    for (const m of js.matchAll(re)) {
+      const s = m[1]!.replace(/\\n/g, " ").replace(/\\u([0-9a-f]{4})/gi, (_x, h: string) => String.fromCharCode(parseInt(h, 16))).replace(/\\(.)/g, "$1").trim();
+      if (s.split(/\s+/).length < 2 && !/[$€₹£]\s?\d/.test(s)) continue;
+      if (/[{}<>=;|]|=>|^\/|\.(js|css|png|svg)\b/.test(s)) continue;
+      if (/\b(flex|px-\d|py-\d|text-(xs|sm|lg)|bg-|rounded|grid-cols|w-\d|h-\d|items-center)\b/.test(s)) continue;
+      const letters = s.replace(/[^A-Za-z\u00C0-\uFFFF]/g, "").length;
+      if (letters / s.length < 0.6) continue;
+      if (/^(something went wrong|not found|page not found|go home|try again|sign out|this page didn't load)/i.test(s) || /doesn't exist or has been moved|went wrong on our end/i.test(s)) continue;
+      lines.add(s);
+    }
+  }
+  return [...lines].join("\n");
 }
 
 export type ChunkRow = {
