@@ -125,6 +125,31 @@ async function urlsFromSitemap(origin: string, limit: number): Promise<string[]>
 
 export type CrawledPage = { url: string; title: string; text: string };
 
+function extractMeta(html: string): string {
+  const out = new Set<string>();
+  const t = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(html)?.[1];
+  if (t) out.add(decodeEntities(t).trim());
+  for (const m of html.matchAll(/<meta[^>]+(?:name|property)=["'](?:description|og:title|og:description|twitter:description)["'][^>]*content=["']([^"']+)["']/gi)) {
+    out.add(decodeEntities(m[1]!).trim());
+  }
+  return [...out].filter(Boolean).join("\n");
+}
+
+async function fetchRendered(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(`https://r.jina.ai/${url}`, {
+      signal: AbortSignal.timeout(30000),
+      headers: { Accept: "text/plain", "X-Return-Format": "text" },
+    });
+    if (!res.ok) return null;
+    const body = await res.text();
+    if (/This page didn't load|Something went wrong/i.test(body) && body.length < 600) return null;
+    return body.replace(/^(Title|URL Source|Markdown Content):.*$/gm, "").trim();
+  } catch {
+    return null;
+  }
+}
+
 /** Crawls a site via sitemap.xml when available, otherwise by following internal links. */
 export async function crawlSite(
   startUrl: string,
@@ -147,8 +172,17 @@ export async function crawlSite(
     const html = await fetchText(url);
     if (!html) continue;
 
-    const { title, text } = extractContent(html);
-    if (text.length > 200) {
+    let { title, text } = extractContent(html);
+    if (text.length < 200) {
+      // Script-rendered site: ask a reader service to render the page.
+      const rendered = await fetchRendered(url);
+      if (rendered && rendered.length > text.length) text = rendered;
+    }
+    if (text.length < 200) {
+      const meta = extractMeta(html);
+      if (meta) text = [meta, text].filter(Boolean).join("\n");
+    }
+    if (text.length > 40) {
       pages.push({ url, title: title || url, text });
       onProgress?.(pages.length);
     }
