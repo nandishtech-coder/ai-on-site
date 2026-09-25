@@ -58,7 +58,7 @@ export async function* streamGroundedAnswer(input: {
       "Lovable-API-Key": key,
       "X-Lovable-AIG-SDK": "fetch",
     },
-    signal: input.signal,
+    signal: input.signal ?? null,
     body: JSON.stringify({
       model: CHAT_MODEL,
       stream: true,
