@@ -226,7 +226,7 @@ async function fetchRaw(url: string): Promise<string | null> {
   }
 }
 
-async function textFromScripts(origin: string, startUrl: string): Promise<string> {
+export async function textFromScripts(origin: string, startUrl: string): Promise<string> {
   const html = (await fetchRaw(startUrl)) ?? "";
   const scripts = new Set<string>();
   for (const m of html.matchAll(/(?:src|href)=["']([^"']+\.m?js)["']/gi)) {
