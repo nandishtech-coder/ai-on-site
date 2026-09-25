@@ -202,7 +202,70 @@ export async function crawlSite(
     }
   }
 
+  // Script-built sites keep their words inside their code files. Read them there.
+  const total = pages.reduce((n, p) => n + p.text.length, 0);
+  if (total < pages.length * 800 + 400) {
+    const bundle = await textFromScripts(origin, startUrl);
+    if (bundle.length > 200) {
+      pages.push({ url: `${origin}/`, title: "Full website content", text: bundle });
+      onProgress?.(pages.length);
+    }
+  }
+
   return pages;
+}
+
+const JUNK = /error|invalid|abort|token|session|webauthn|reconnect|undefined|null|failed|cannot|must be|expected|deprecated|supabase|localstorage|iframe|polyfill|http|\.js|\.css|=>|function|return |\{|\}|\\/i;
+
+async function fetchRaw(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url, { redirect: "follow", signal: AbortSignal.timeout(15000) });
+    return res.ok ? await res.text() : null;
+  } catch {
+    return null;
+  }
+}
+
+async function textFromScripts(origin: string, startUrl: string): Promise<string> {
+  const html = (await fetchRaw(startUrl)) ?? "";
+  const scripts = new Set<string>();
+  for (const m of html.matchAll(/(?:src|href)=["']([^"']+\.m?js)["']/gi)) {
+    try {
+      const u = new URL(m[1]!, startUrl);
+      if (u.origin === origin) scripts.add(u.href);
+    } catch {
+      /* skip */
+    }
+  }
+  const queue = [...scripts];
+  const lines = new Set<string>();
+  let fetched = 0;
+  while (queue.length && fetched < 80) {
+    const src = queue.shift()!;
+    fetched++;
+    const js = await fetchRaw(src);
+    if (!js) continue;
+    // follow lazily loaded chunks (other pages/sections)
+    for (const m of js.matchAll(/["'`](?:\.\/|\/assets\/)([\w.-]+\.js)["'`]/g)) {
+      const u = new URL(m[0].includes("/assets/") ? `/assets/${m[1]}` : m[1]!, src).href;
+      if (!scripts.has(u)) {
+        scripts.add(u);
+        queue.push(u);
+      }
+    }
+    for (const m of js.matchAll(/"((?:[^"\\]|\\.){20,600})"|'((?:[^'\\]|\\.){20,600})'|`([^`$\\]{20,600})`/g)) {
+      const s = (m[1] ?? m[2] ?? m[3] ?? "").replace(/\\n/g, " ").replace(/\\u2014/g, "—").replace(/\\'/g, "'").trim();
+      const words = s.split(/\s+/);
+      if (words.length < 4) continue;
+      if (/^[MmLlCcZz]?[\d.\s,-]+/.test(s) && /\d/.test(s.slice(0, 3))) continue; // svg paths
+      if (JUNK.test(s)) continue;
+      if (/[a-z]+-[a-z0-9]+(:| )[a-z]/.test(s) && /\b(flex|px-|py-|text-|bg-|rounded|grid|w-|h-)/.test(s)) continue; // css classes
+      const letters = s.replace(/[^A-Za-z\u00C0-\uFFFF]/g, "").length;
+      if (letters / s.length < 0.7) continue;
+      lines.add(s);
+    }
+  }
+  return [...lines].join("\n");
 }
 
 export type ChunkRow = {
