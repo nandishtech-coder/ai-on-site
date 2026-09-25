@@ -215,7 +215,8 @@ export async function crawlSite(
   return pages;
 }
 
-const JUNK = /error|invalid|abort|token|session|webauthn|reconnect|undefined|null|failed|cannot|must be|expected|deprecated|supabase|localstorage|iframe|polyfill|http|\.js|\.css|=>|function|return |\{|\}|\\/i;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _JUNK = /error|invalid|abort|token|session|webauthn|reconnect|undefined|null|failed|cannot|must be|expected|deprecated|supabase|localstorage|iframe|polyfill|http|\.js|\.css|=>|function|return |\{|\}|\\/i;
 
 async function fetchRaw(url: string): Promise<string | null> {
   try {
@@ -253,15 +254,14 @@ export async function textFromScripts(origin: string, startUrl: string): Promise
         queue.push(u);
       }
     }
-    for (const m of js.matchAll(/"((?:[^"\\]|\\.){20,600})"|'((?:[^'\\]|\\.){20,600})'|`([^`$\\]{20,600})`/g)) {
-      const s = (m[1] ?? m[2] ?? m[3] ?? "").replace(/\\n/g, " ").replace(/\\u2014/g, "—").replace(/\\'/g, "'").trim();
-      const words = s.split(/\s+/);
-      if (words.length < 4) continue;
-      if (/^[MmLlCcZz]?[\d.\s,-]+/.test(s) && /\d/.test(s.slice(0, 3))) continue; // svg paths
-      if (JUNK.test(s)) continue;
-      if (/[a-z]+-[a-z0-9]+(:| )[a-z]/.test(s) && /\b(flex|px-|py-|text-|bg-|rounded|grid|w-|h-)/.test(s)) continue; // css classes
+    const re = /(?:children|title|description|desc|text|label|subtitle|heading|question|answer|quote|content|summary|tagline|body|caption|name|role|price|features?|placeholder)\s*:\s*"((?:[^"\\\n]|\\.){3,800})"/g;
+    for (const m of js.matchAll(re)) {
+      const s = m[1]!.replace(/\\n/g, " ").replace(/\\u([0-9a-f]{4})/gi, (_x, h: string) => String.fromCharCode(parseInt(h, 16))).replace(/\\(.)/g, "$1").trim();
+      if (s.split(/\s+/).length < 2 && !/[$€₹£]\s?\d/.test(s)) continue;
+      if (/[{}<>=;|]|=>|^\/|\.(js|css|png|svg)\b/.test(s)) continue;
+      if (/\b(flex|px-\d|py-\d|text-(xs|sm|lg)|bg-|rounded|grid-cols|w-\d|h-\d|items-center)\b/.test(s)) continue;
       const letters = s.replace(/[^A-Za-z\u00C0-\uFFFF]/g, "").length;
-      if (letters / s.length < 0.7) continue;
+      if (letters / s.length < 0.6) continue;
       lines.add(s);
     }
   }
