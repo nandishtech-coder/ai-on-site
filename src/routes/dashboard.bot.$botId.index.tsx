@@ -29,6 +29,7 @@ function Overview() {
       const t = setTimeout(() => void bot.refetch(), 2000);
       return () => clearTimeout(t);
     }
+    return undefined;
   }, [bot, syncing]);
 
   if (bot.isLoading) return <p className="text-muted-foreground">Loading…</p>;
