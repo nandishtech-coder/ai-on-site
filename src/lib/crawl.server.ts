@@ -51,7 +51,6 @@ async function crawlWithFirecrawl(startUrl: string, maxPages: number): Promise<C
     body: JSON.stringify({
       url: startUrl,
       limit: maxPages,
-      maxDepth: 10,
       sitemap: "include",
       allowExternalLinks: false,
       scrapeOptions: { formats: ["markdown"], onlyMainContent: true },
