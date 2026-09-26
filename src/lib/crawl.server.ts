@@ -18,6 +18,7 @@ type FirecrawlCrawlResult = {
   id?: string;
   status?: string;
   data?: FirecrawlDocument[];
+  next?: string;
   error?: string;
 };
 
@@ -78,10 +79,19 @@ async function crawlWithFirecrawl(startUrl: string, maxPages: number): Promise<C
     throw new Error("Full-site reading is still taking too long.");
   }
 
+  const documents = [...(result.data ?? [])];
+  let next = result.next;
+  while (next && documents.length < maxPages) {
+    const nextUrl = new URL(next);
+    const page = await firecrawlRequest(`${nextUrl.pathname.replace(/^\/v2/, "")}${nextUrl.search}`);
+    documents.push(...(page.data ?? []));
+    next = page.next;
+  }
+
   const origin = new URL(startUrl).origin;
   const seen = new Set<string>();
   const pages: CrawledPage[] = [];
-  for (const document of result.data ?? []) {
+  for (const document of documents) {
     const source = document.metadata?.sourceURL ?? document.metadata?.url ?? startUrl;
     let url: URL;
     try {
