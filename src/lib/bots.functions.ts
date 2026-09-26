@@ -73,7 +73,7 @@ export const crawlBot = createServerFn({ method: "POST" })
     };
 
     try {
-      await setStage("Parsing sitemap.xml & crawling internal links…", {
+      await setStage("Discovering every public page and sitemap…", {
         crawl_status: "running",
         crawl_error: null,
       });
@@ -81,7 +81,7 @@ export const crawlBot = createServerFn({ method: "POST" })
       const pages = await crawlSite(bot.domain, maxPages);
       if (pages.length === 0) {
         throw new Error(
-          "We couldn't read any text from that website. Check the address and that the site is publicly reachable.",
+          "We reached the website but couldn't find readable public content. Check that its pages are public and not blocked from website readers.",
         );
       }
 
