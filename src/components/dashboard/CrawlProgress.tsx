@@ -1,7 +1,7 @@
 import { Check, Loader2 } from "lucide-react";
 
 export const CRAWL_STAGES = [
-  "Parsing sitemap.xml & crawling internal links…",
+  "Discovering every public page and sitemap…",
   "Extracting clean text content…",
   "Generating vector embeddings…",
   "Bot setup complete!",

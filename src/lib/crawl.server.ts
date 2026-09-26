@@ -1,5 +1,108 @@
 import { embedTexts } from "./ai.server";
 
+const FIRECRAWL_GATEWAY = "https://connector-gateway.lovable.dev/firecrawl/v2";
+
+type FirecrawlDocument = {
+  markdown?: string;
+  html?: string;
+  metadata?: {
+    title?: string;
+    sourceURL?: string;
+    url?: string;
+    statusCode?: number;
+  };
+};
+
+type FirecrawlCrawlResult = {
+  success?: boolean;
+  id?: string;
+  status?: string;
+  data?: FirecrawlDocument[];
+  error?: string;
+};
+
+function firecrawlHeaders(): HeadersInit | null {
+  const lovableKey = process.env["LOVABLE_API_KEY"];
+  const connectionKey = process.env["FIRECRAWL_API_KEY"];
+  if (!lovableKey || !connectionKey) return null;
+  return {
+    Authorization: `Bearer ${lovableKey}`,
+    "X-Connection-Api-Key": connectionKey,
+    "Content-Type": "application/json",
+  };
+}
+
+async function firecrawlRequest(path: string, init?: RequestInit): Promise<FirecrawlCrawlResult> {
+  const headers = firecrawlHeaders();
+  if (!headers) throw new Error("Full-site reader is not configured.");
+  const response = await fetch(`${FIRECRAWL_GATEWAY}${path}`, {
+    ...init,
+    headers: { ...headers, ...init?.headers },
+    signal: init?.signal ?? AbortSignal.timeout(55000),
+  });
+  const body = await response.text();
+  if (!response.ok) throw new Error(`Full-site reader failed [${response.status}]: ${body}`);
+  return JSON.parse(body) as FirecrawlCrawlResult;
+}
+
+async function crawlWithFirecrawl(startUrl: string, maxPages: number): Promise<CrawledPage[]> {
+  const started = await firecrawlRequest("/crawl", {
+    method: "POST",
+    body: JSON.stringify({
+      url: startUrl,
+      limit: maxPages,
+      maxDepth: 10,
+      sitemap: "include",
+      allowExternalLinks: false,
+      scrapeOptions: { formats: ["markdown"], onlyMainContent: true },
+    }),
+  });
+
+  let result = started;
+  if (started.id && started.status !== "completed") {
+    const deadline = Date.now() + 50000;
+    while (Date.now() < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, 1800));
+      result = await firecrawlRequest(`/crawl/${encodeURIComponent(started.id)}`);
+      if (result.status === "completed") break;
+      if (result.status === "failed" || result.status === "cancelled") {
+        throw new Error(result.error || "Full-site reader could not finish this website.");
+      }
+    }
+  }
+
+  if (result.status !== "completed" && !result.data?.length) {
+    throw new Error("Full-site reading is still taking too long.");
+  }
+
+  const origin = new URL(startUrl).origin;
+  const seen = new Set<string>();
+  const pages: CrawledPage[] = [];
+  for (const document of result.data ?? []) {
+    const source = document.metadata?.sourceURL ?? document.metadata?.url ?? startUrl;
+    let url: URL;
+    try {
+      url = new URL(source, startUrl);
+    } catch {
+      continue;
+    }
+    if (url.origin !== origin || (document.metadata?.statusCode ?? 200) >= 400) continue;
+    url.hash = "";
+    const cleanUrl = url.href.replace(/\/$/, "");
+    if (seen.has(cleanUrl)) continue;
+    const text = (document.markdown ?? extractContent(document.html ?? "").text).trim();
+    if (text.length < 40) continue;
+    seen.add(cleanUrl);
+    pages.push({
+      url: cleanUrl || origin,
+      title: document.metadata?.title?.trim() || cleanUrl || origin,
+      text,
+    });
+    if (pages.length >= maxPages) break;
+  }
+  return pages;
+}
+
 export function normalizeDomain(raw: string): string {
   let value = raw.trim();
   if (!value) throw new Error("Please enter a website address.");
@@ -156,6 +259,16 @@ export async function crawlSite(
   maxPages: number,
   onProgress?: (count: number) => void,
 ): Promise<CrawledPage[]> {
+  try {
+    const completePages = await crawlWithFirecrawl(startUrl, maxPages);
+    if (completePages.length > 0) {
+      onProgress?.(completePages.length);
+      return completePages;
+    }
+  } catch (error) {
+    console.warn("Full-site reader unavailable; using built-in crawler.", error);
+  }
+
   const origin = new URL(startUrl).origin;
   const pages: CrawledPage[] = [];
   const visited = new Set<string>();
