@@ -32,6 +32,10 @@ function firecrawlHeaders(): HeadersInit | null {
   };
 }
 
+function sameSite(left: URL, right: URL): boolean {
+  return left.protocol === right.protocol && left.hostname.replace(/^www\./i, "") === right.hostname.replace(/^www\./i, "");
+}
+
 async function firecrawlRequest(path: string, init?: RequestInit): Promise<FirecrawlCrawlResult> {
   const headers = firecrawlHeaders();
   if (!headers) throw new Error("Full-site reader is not configured.");
@@ -85,7 +89,7 @@ async function crawlWithFirecrawl(startUrl: string, maxPages: number): Promise<C
     } catch {
       continue;
     }
-    if (url.origin !== origin || (document.metadata?.statusCode ?? 200) >= 400) continue;
+    if (!sameSite(url, new URL(origin)) || (document.metadata?.statusCode ?? 200) >= 400) continue;
     url.hash = "";
     const cleanUrl = url.href.replace(/\/$/, "");
     if (seen.has(cleanUrl)) continue;
@@ -212,7 +216,7 @@ async function urlsFromSitemap(origin: string, limit: number): Promise<string[]>
       }
       try {
         const url = new URL(loc);
-        if (url.origin !== origin || SKIP_EXT.test(url.pathname)) continue;
+        if (!sameSite(url, new URL(origin)) || SKIP_EXT.test(url.pathname)) continue;
         const clean = `${url.origin}${url.pathname}`;
         if (!found.includes(clean)) found.push(clean);
         if (found.length >= limit) break;
@@ -304,7 +308,7 @@ export async function crawlSite(
         if (queue.length + pages.length > maxPages * 4) break;
         try {
           const next = new URL(match[1]!, url);
-          if (next.origin !== origin || SKIP_EXT.test(next.pathname)) continue;
+           if (!sameSite(next, new URL(origin)) || SKIP_EXT.test(next.pathname)) continue;
           const clean = `${next.origin}${next.pathname.replace(/\/$/, "")}`;
           if (!visited.has(clean) && !queue.includes(clean)) queue.push(clean);
         } catch {
