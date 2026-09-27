@@ -31,10 +31,10 @@ const LeadInput = z.object({
   type: z.literal("lead"),
   botId: z.string().uuid(),
   conversationId: z.string().uuid().nullable().optional(),
-  name: z.string().max(200).optional(),
-  email: z.string().email().max(255),
-  phone: z.string().max(50).optional(),
-  question: z.string().max(2000).optional(),
+  name: z.string().trim().min(1).max(200),
+  email: z.string().trim().email().max(255),
+  phone: z.string().trim().max(50).optional(),
+  question: z.string().trim().max(2000).optional(),
 });
 
 export const Route = createFileRoute("/api/public/chat")({
@@ -73,10 +73,11 @@ export const Route = createFileRoute("/api/public/chat")({
 
         if ((raw as { type?: string })?.type === "lead") {
           const parsed = LeadInput.safeParse(raw);
-          if (!parsed.success) return json({ error: "Please enter a valid email." }, 400);
+          if (!parsed.success) return json({ error: "Please enter your name and a valid email." }, 400);
           const d = parsed.data;
-          const { data: bot } = await supabaseAdmin.from("bots").select("id").eq("id", d.botId).maybeSingle();
-          if (!bot) return json({ error: "Chatbot not found" }, 404);
+          const { data: bot } = await supabaseAdmin.from("bots").select("id, is_active, lead_capture_enabled").eq("id", d.botId).maybeSingle();
+          if (!bot || !bot.is_active) return json({ error: "Chatbot not found" }, 404);
+          if (!bot.lead_capture_enabled) return json({ error: "Contact collection is off for this chatbot." }, 403);
           const { error } = await supabaseAdmin.from("leads").insert({
             bot_id: d.botId,
             conversation_id: d.conversationId ?? null,
