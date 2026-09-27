@@ -186,7 +186,7 @@ function Customize() {
             <div className="flex items-center justify-between rounded-xl border border-border p-4">
               <div>
                 <p className="font-medium">Collect contact details</p>
-                <p className="text-sm text-muted-foreground">When the bot can't answer, offer visitors a short contact form.</p>
+                <p className="text-sm text-muted-foreground">Offer visitors a contact form when they ask about services or want to get in touch.</p>
               </div>
               <Switch checked={form.lead_capture_enabled} onCheckedChange={(v) => set("lead_capture_enabled", v)} />
             </div>
@@ -202,6 +202,7 @@ function Customize() {
           greeting={form.greeting_message}
           avatar={form.avatar_key}
           showBranding={isFree || form.show_branding}
+          leadCapture={form.lead_capture_enabled}
         />
       </div>
     </div>

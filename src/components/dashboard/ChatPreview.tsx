@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from "react";
 
+import { Button } from "@/components/ui/button";
 import { AVATARS } from "@/lib/bot-data";
+import { ChatLinks } from "@/lib/chat-links";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -11,10 +13,16 @@ export function ChatPreview(props: {
   greeting: string;
   avatar: string;
   showBranding: boolean;
+  leadCapture: boolean;
 }) {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
+  const [leadQuestion, setLeadQuestion] = useState("");
+  const [leadOpen, setLeadOpen] = useState(false);
+  const [leadSent, setLeadSent] = useState(false);
+  const [leadBusy, setLeadBusy] = useState(false);
+  const [leadError, setLeadError] = useState("");
 
   async function send(e: FormEvent) {
     e.preventDefault();
@@ -43,10 +51,38 @@ export function ChatPreview(props: {
         answer += dec.decode(value, { stream: true });
         setMessages([...next, { role: "assistant", content: answer }]);
       }
+      if (props.leadCapture && !leadSent && (/\b(service|services|website|project|build|develop|quote|hire|pricing|price|cost|interested)\b/i.test(text) || /\b(contact|email|reach out|get back to you)\b/i.test(answer))) {
+        setLeadQuestion(text);
+      }
     } catch (error) {
       setMessages([...next, { role: "assistant", content: (error as Error).message }]);
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function submitLead(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (leadBusy) return;
+    setLeadBusy(true);
+    setLeadError("");
+    const data = new FormData(e.currentTarget);
+    try {
+      const res = await fetch("/api/public/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "lead", botId: props.botId, name: data.get("name"), email: data.get("email"), phone: data.get("phone"), question: leadQuestion }),
+      });
+      if (!res.ok) {
+        const result = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(result.error ?? "Could not save your details.");
+      }
+      setLeadSent(true);
+      setLeadOpen(false);
+    } catch (error) {
+      setLeadError((error as Error).message);
+    } finally {
+      setLeadBusy(false);
     }
   }
 
@@ -63,6 +99,19 @@ export function ChatPreview(props: {
         {messages.map((m, i) => (
           <Bubble key={i} role={m.role} color={props.color} text={m.content} />
         ))}
+        {props.leadCapture && leadQuestion && !leadSent && (
+          leadOpen ? (
+            <form onSubmit={submitLead} className="space-y-2 rounded-lg border border-border bg-card p-3 text-sm">
+              <p className="font-medium">Interested in our services? Leave your details.</p>
+              <input name="name" required maxLength={200} placeholder="Name" className="w-full rounded-md border border-input bg-background px-3 py-2" />
+              <input name="email" type="email" required maxLength={255} placeholder="Email" className="w-full rounded-md border border-input bg-background px-3 py-2" />
+              <input name="phone" type="tel" maxLength={50} placeholder="Phone (optional)" className="w-full rounded-md border border-input bg-background px-3 py-2" />
+              {leadError && <p role="alert" className="text-destructive">{leadError}</p>}
+              <Button type="submit" size="sm" disabled={leadBusy}>{leadBusy ? "Sending…" : "Send details"}</Button>
+            </form>
+          ) : <Button type="button" variant="link" className="self-start px-0" onClick={() => setLeadOpen(true)}>Leave your contact details →</Button>
+        )}
+        {leadSent && <p className="text-sm text-muted-foreground">Thanks! Your details have been sent.</p>}
       </div>
       <form onSubmit={send} className="flex gap-2 border-t border-border p-2">
         <input
@@ -71,13 +120,12 @@ export function ChatPreview(props: {
           placeholder="Ask a test question…"
           className="flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none"
         />
-        <button
+        <Button
           disabled={busy}
-          className="rounded-lg px-3 text-sm font-medium disabled:opacity-60"
-          style={{ background: props.color, color: "#fff" }}
+          className="shrink-0"
         >
           Send
-        </button>
+        </Button>
       </form>
       {props.showBranding && (
         <p className="pb-2 text-center text-[11px] text-muted-foreground">Powered by Helix</p>
@@ -90,12 +138,12 @@ function Bubble({ role, text, color }: { role: "user" | "assistant"; text: strin
   if (role === "user")
     return (
       <div className="max-w-[85%] self-end whitespace-pre-wrap rounded-2xl px-3 py-2 text-sm" style={{ background: color, color: "#fff" }}>
-        {text}
+        <ChatLinks text={text} />
       </div>
     );
   return (
     <div className="max-w-[85%] self-start whitespace-pre-wrap rounded-2xl border border-border bg-card px-3 py-2 text-sm text-foreground">
-      {text}
+      <ChatLinks text={text} />
     </div>
   );
 }
