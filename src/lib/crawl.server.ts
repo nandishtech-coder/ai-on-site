@@ -58,7 +58,8 @@ async function crawlWithFirecrawl(startUrl: string, maxPages: number): Promise<C
       limit: maxPages,
       sitemap: "include",
       allowExternalLinks: false,
-      scrapeOptions: { formats: ["markdown"], onlyMainContent: true },
+      // Some sites render cards, prices and other sections after initial hydration.
+      scrapeOptions: { formats: ["markdown"], onlyMainContent: true, waitFor: 2000 },
     }),
   });
 
