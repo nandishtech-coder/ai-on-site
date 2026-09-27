@@ -114,13 +114,28 @@ export const Route = createFileRoute("/api/public/chat")({
         let context = "";
         try {
           const [embedding] = await embedTexts([question]);
-          const { data: matches } = await supabaseAdmin.rpc("match_site_chunks", {
+          const { data: matches, error: matchError } = await supabaseAdmin.rpc("match_site_chunks", {
             p_bot_id: bot.id,
             query_embedding: JSON.stringify(embedding),
-            match_count: 6,
+            match_count: 8,
           });
-          context = (matches ?? [])
-            .map((m) => `Source: ${m.url}\n${m.content}`)
+          if (matchError) throw matchError;
+          const selected = new Map((matches ?? []).map((m) => [m.id, m]));
+          // General service/price questions need the whole relevant page, not just
+          // whichever individual chunk happens to rank highest semantically.
+          if (/\b(service|services|offer|pricing|price|prices|cost|rate|rates|charge|charges|package|packages)\b|कीमत|सेवाएं|सेवा|मूल्य/i.test(question)) {
+            const { data: catalog, error: catalogError } = await supabaseAdmin
+              .from("site_chunks")
+              .select("id, url, title, content")
+              .eq("bot_id", bot.id)
+              .eq("source", "crawl")
+              .or("url.ilike.%/services%,url.ilike.%/pricing%,title.ilike.%services%,title.ilike.%pricing%")
+              .limit(12);
+            if (catalogError) throw catalogError;
+            for (const chunk of catalog ?? []) selected.set(chunk.id, chunk);
+          }
+          context = [...selected.values()]
+            .map((m) => `Source: ${m.title ?? m.url} (${m.url})\n${m.content}`)
             .join("\n\n---\n\n");
         } catch (error) {
           console.error("retrieval failed", error);
@@ -129,7 +144,7 @@ export const Route = createFileRoute("/api/public/chat")({
         const system = [
           `You are an AI support assistant for ${bot.name}. Answer strictly using the following website context: ${context || "(no context found)"}. If unknown, politely offer to collect their contact info.`,
           bot.system_prompt ? `Additional instructions from the site owner: ${bot.system_prompt}` : "",
-          "Reply in the same language the visitor writes in. Keep answers concise and friendly. Use plain text.",
+          "Reply in the same language the visitor writes in. Use plain text. When asked about services or prices, list the actual service names and exact prices shown in the website context, including 'onwards' or other qualifications. Do not claim prices are unavailable when they are present in the context, and never invent prices.",
         ]
           .filter(Boolean)
           .join("\n\n");
