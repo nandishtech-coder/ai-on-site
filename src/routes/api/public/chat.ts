@@ -120,7 +120,9 @@ export const Route = createFileRoute("/api/public/chat")({
             match_count: 8,
           });
           if (matchError) throw matchError;
-          const selected = new Map((matches ?? []).map((m) => [m.id, m]));
+          const selected = new Map<string, { id: string; url: string; title: string | null; content: string }>(
+            (matches ?? []).map((m) => [m.id, m]),
+          );
           // General service/price questions need the whole relevant page, not just
           // whichever individual chunk happens to rank highest semantically.
           if (/\b(service|services|offer|pricing|price|prices|cost|rate|rates|charge|charges|package|packages)\b|कीमत|सेवाएं|सेवा|मूल्य/i.test(question)) {
