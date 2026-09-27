@@ -10,3 +10,4 @@
 <!-- LOVABLE:END -->
 
 - Use Firecrawl through the linked gateway as the primary full-site reader, with the same-origin built-in crawler as fallback, because customer sites may be JavaScript-rendered or have complex sitemaps.
+- Wait briefly for client-rendered site sections during crawling and include full catalog-page chunks for service/price questions, because initial markdown and top semantic matches can omit visible product details.
