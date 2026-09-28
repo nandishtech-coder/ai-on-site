@@ -429,7 +429,7 @@ export async function buildChunkRows(
   const generated = missing.length > 0 ? await embedTexts(missing.map((item) => item.content)) : [];
   const generatedByContent = new Map(missing.map((item, index) => [item.content, JSON.stringify(generated[index] ?? [])]));
 
-  return capped.map((item, index) => ({
+  return capped.map((item) => ({
     bot_id: botId,
     url: item.url,
     title: item.title,

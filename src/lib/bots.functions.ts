@@ -83,6 +83,7 @@ export const crawlBot = createServerFn({ method: "POST" })
         .eq("id", bot.id);
     };
 
+    let hasExistingTraining = false;
     try {
       await setStage("Discovering every public page and sitemap…", {
         crawl_status: "running",
@@ -104,6 +105,7 @@ export const crawlBot = createServerFn({ method: "POST" })
         .eq("bot_id", bot.id)
         .eq("source", "crawl");
       if (existingError) throw new Error(existingError.message);
+      hasExistingTraining = (existingRows?.length ?? 0) > 0;
 
       const rows = await buildChunkRows(bot.id, pages, existingRows ?? []);
 
@@ -131,7 +133,7 @@ export const crawlBot = createServerFn({ method: "POST" })
       const message = safeCrawlError(error);
       await context.supabase
         .from("bots")
-        .update({ crawl_status: "failed", crawl_stage: null, crawl_error: message })
+        .update({ crawl_status: hasExistingTraining ? "ready" : "failed", crawl_stage: null, crawl_error: message })
         .eq("id", bot.id);
       throw new Error(message);
     }

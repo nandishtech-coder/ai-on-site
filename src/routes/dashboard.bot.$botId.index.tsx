@@ -85,9 +85,9 @@ function Overview() {
             <p className="text-sm text-muted-foreground">
               {b.message_count} / {plan.messages.toLocaleString()} messages used ({plan.name} plan)
             </p>
-            {b.crawl_status === "failed" && b.crawl_error && (
+            {b.crawl_error && (
               <div className="space-y-1 text-sm text-destructive">
-                <p>Website sync paused.</p>
+                <p>Website sync could not update.</p>
                 <p>{b.crawl_error}</p>
               </div>
             )}
