@@ -406,7 +406,11 @@ export type ChunkRow = {
 };
 
 /** Splits pages into overlapping chunks and embeds them. */
-export async function buildChunkRows(botId: string, pages: CrawledPage[]): Promise<ChunkRow[]> {
+export async function buildChunkRows(
+  botId: string,
+  pages: CrawledPage[],
+  existingRows: Array<{ content: string; embedding: unknown }> = [],
+): Promise<ChunkRow[]> {
   const pending: { url: string; title: string; content: string }[] = [];
 
   for (const page of pages) {
@@ -418,7 +422,12 @@ export async function buildChunkRows(botId: string, pages: CrawledPage[]): Promi
   const capped = pending.slice(0, 1200);
   if (capped.length === 0) return [];
 
-  const embeddings = await embedTexts(capped.map((item) => item.content));
+  const existingEmbeddings = new Map(
+    existingRows.map((row) => [row.content, typeof row.embedding === "string" ? row.embedding : JSON.stringify(row.embedding)]),
+  );
+  const missing = capped.filter((item) => !existingEmbeddings.has(item.content));
+  const generated = missing.length > 0 ? await embedTexts(missing.map((item) => item.content)) : [];
+  const generatedByContent = new Map(missing.map((item, index) => [item.content, JSON.stringify(generated[index] ?? [])]));
 
   return capped.map((item, index) => ({
     bot_id: botId,
@@ -426,6 +435,6 @@ export async function buildChunkRows(botId: string, pages: CrawledPage[]): Promi
     title: item.title,
     content: item.content,
     source: "crawl",
-    embedding: JSON.stringify(embeddings[index] ?? []),
+    embedding: existingEmbeddings.get(item.content) ?? generatedByContent.get(item.content) ?? "[]",
   }));
 }

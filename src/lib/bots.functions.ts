@@ -12,6 +12,17 @@ const FaqInput = z.object({
   answer: z.string().min(3).max(4000),
 });
 
+function safeCrawlError(error: unknown): string {
+  const message = error instanceof Error ? error.message : "";
+  if (/\[402\]|payment_required|not enough credits/i.test(message)) {
+    return "Your saved website content is still available, but new or changed pages cannot be processed until AI credits are available.";
+  }
+  if (/\[403\]|credit_limit_reached/i.test(message)) {
+    return "Your saved website content is still available, but website syncing is paused by the workspace AI limit.";
+  }
+  return message || "Website sync could not be completed. Your previously trained content is still available.";
+}
+
 export const createBot = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => CreateBotInput.parse(input))
@@ -87,7 +98,14 @@ export const crawlBot = createServerFn({ method: "POST" })
 
       await setStage("Extracting clean text content…", { pages_crawled: pages.length });
 
-      const rows = await buildChunkRows(bot.id, pages);
+      const { data: existingRows, error: existingError } = await context.supabase
+        .from("site_chunks")
+        .select("content, embedding")
+        .eq("bot_id", bot.id)
+        .eq("source", "crawl");
+      if (existingError) throw new Error(existingError.message);
+
+      const rows = await buildChunkRows(bot.id, pages, existingRows ?? []);
 
       await setStage("Generating vector embeddings…");
 
@@ -110,7 +128,7 @@ export const crawlBot = createServerFn({ method: "POST" })
 
       return { pages: pages.length, chunks: rows.length };
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Crawl failed.";
+      const message = safeCrawlError(error);
       await context.supabase
         .from("bots")
         .update({ crawl_status: "failed", crawl_stage: null, crawl_error: message })
