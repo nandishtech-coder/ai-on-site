@@ -173,7 +173,12 @@ export const Route = createFileRoute("/api/public/chat")({
               }
             } catch (error) {
               console.error("chat failed", error);
-              const fallback = answer ? "" : "Sorry, I'm having trouble answering right now. Please try again shortly.";
+              const noCredits = /\[402\]|\[403\]/.test(String((error as Error)?.message));
+              const fallback = answer
+                ? ""
+                : noCredits
+                  ? "This assistant is temporarily unavailable. Please leave your contact details or try again later."
+                  : "Sorry, I'm having trouble answering right now. Please try again shortly.";
               answer += fallback;
               if (fallback) controller.enqueue(encoder.encode(fallback));
             }
