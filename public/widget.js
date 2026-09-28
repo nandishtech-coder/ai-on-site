@@ -59,10 +59,31 @@
     var busy = false;
     var leadShown = false;
 
+    var LINK = /https?:\/\/[^\s<>"']+|www\.[^\s<>"']+|wa\.me\/[^\s<>"']+/gi;
+    function render(el, text) {
+      el.textContent = "";
+      var last = 0, m;
+      LINK.lastIndex = 0;
+      while ((m = LINK.exec(text))) {
+        if (m.index > last) el.appendChild(document.createTextNode(text.slice(last, m.index)));
+        var raw = m[0];
+        var trail = (raw.match(/[.,!?;:)}\]]+$/) || [""])[0];
+        var label = raw.slice(0, raw.length - trail.length);
+        var href = /^https?:/i.test(label) ? label : "https://" + label;
+        var a = document.createElement("a");
+        a.href = href; a.target = "_blank"; a.rel = "noopener noreferrer";
+        a.textContent = label;
+        a.style.cssText = "color:inherit;text-decoration:underline;word-break:break-all;font-weight:600";
+        el.appendChild(a);
+        if (trail) el.appendChild(document.createTextNode(trail));
+        last = m.index + raw.length;
+      }
+      if (last < text.length) el.appendChild(document.createTextNode(text.slice(last)));
+    }
     function add(cls, text) {
       var el = document.createElement("div");
       el.className = "m " + cls;
-      el.textContent = text;
+      render(el, text);
       msgs.appendChild(el);
       msgs.scrollTop = msgs.scrollHeight;
       return el;
