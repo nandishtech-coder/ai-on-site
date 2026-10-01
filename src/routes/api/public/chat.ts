@@ -105,7 +105,12 @@ export const Route = createFileRoute("/api/public/chat")({
         if (!bot || !bot.is_active) return json({ error: "Chatbot not found" }, 404);
 
         const plan = getPlan(bot.plan);
-        if (bot.message_count >= plan.messages) {
+        const { data: extra } = await supabaseAdmin
+          .from("user_credits")
+          .select("extra_messages")
+          .eq("user_id", bot.user_id)
+          .maybeSingle();
+        if (bot.message_count >= plan.messages + (extra?.extra_messages ?? 0)) {
           return json({ error: "This chatbot has reached its monthly message limit." }, 429);
         }
 
