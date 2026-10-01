@@ -29,7 +29,10 @@ function AdminPage() {
   if (!admin.data?.isAdmin) return <p className="text-destructive">Only admins can open this page.</p>;
 
   async function give(userId: string, amount: number) {
-    if (!Number.isFinite(amount) || amount === 0) return toast.error("Enter a number of credits.");
+    if (!Number.isFinite(amount) || amount === 0) {
+      toast.error("Enter a number of credits.");
+      return;
+    }
     setBusy(userId);
     try {
       const r = await add({ data: { userId, amount } });
