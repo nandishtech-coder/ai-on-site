@@ -10,13 +10,16 @@ import {
   Paintbrush,
   PanelLeftClose,
   Plus,
+  ShieldCheck,
   UserPlus,
 } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 
 import { HelixMark } from "@/components/marketing/SiteHeader";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { checkAdmin } from "@/lib/admin.functions";
 import { botsQuery } from "@/lib/bot-data";
 
 export const Route = createFileRoute("/dashboard")({
@@ -49,6 +52,8 @@ function DashboardLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const params = useParams({ strict: false }) as { botId?: string };
   const bots = useQuery({ ...botsQuery(), enabled: !!session });
+  const checkAdminFn = useServerFn(checkAdmin);
+  const isAdmin = useQuery({ queryKey: ["is-admin"], queryFn: () => checkAdminFn(), enabled: !!session });
 
   useEffect(() => {
     if (!loading && !session) void navigate({ to: "/auth", search: { mode: "login" } as never });
@@ -116,6 +121,17 @@ function DashboardLayout() {
         <CreditCard className="h-4 w-4 shrink-0" />
         {!collapsed && "Billing & Account"}
       </Link>
+      {isAdmin.data?.isAdmin && (
+        <Link
+          to="/dashboard/admin"
+          onClick={() => setMobileOpen(false)}
+          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+          activeProps={{ className: "bg-muted text-foreground font-medium" }}
+        >
+          <ShieldCheck className="h-4 w-4 shrink-0" />
+          {!collapsed && "Admin · Credits"}
+        </Link>
+      )}
       <button
         onClick={async () => {
           await supabase.auth.signOut();

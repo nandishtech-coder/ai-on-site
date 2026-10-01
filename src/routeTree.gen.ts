@@ -17,6 +17,7 @@ import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
+import { Route as DashboardAdminRouteImport } from './routes/dashboard.admin'
 import { Route as DashboardBillingRouteImport } from './routes/dashboard.billing'
 import { Route as SolutionsSlugRouteImport } from './routes/solutions.$slug'
 import { Route as ApiPublicChatRouteImport } from './routes/api/public/chat'
@@ -64,6 +65,11 @@ const PricingRoute = PricingRouteImport.update({
 const DashboardIndexRoute = DashboardIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardAdminRoute = DashboardAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardBillingRoute = DashboardBillingRouteImport.update({
@@ -116,6 +122,7 @@ export interface FileRoutesByFullPath {
   '/features': typeof FeaturesRoute
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
+  '/dashboard/admin': typeof DashboardAdminRoute
   '/dashboard/billing': typeof DashboardBillingRoute
   '/solutions/$slug': typeof SolutionsSlugRoute
   '/dashboard/': typeof DashboardIndexRoute
@@ -133,6 +140,7 @@ export interface FileRoutesByTo {
   '/features': typeof FeaturesRoute
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
+  '/dashboard/admin': typeof DashboardAdminRoute
   '/dashboard/billing': typeof DashboardBillingRoute
   '/solutions/$slug': typeof SolutionsSlugRoute
   '/dashboard': typeof DashboardIndexRoute
@@ -152,6 +160,7 @@ export interface FileRoutesById {
   '/features': typeof FeaturesRoute
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
+  '/dashboard/admin': typeof DashboardAdminRoute
   '/dashboard/billing': typeof DashboardBillingRoute
   '/solutions/$slug': typeof SolutionsSlugRoute
   '/dashboard/': typeof DashboardIndexRoute
@@ -172,6 +181,7 @@ export interface FileRouteTypes {
     | '/features'
     | '/onboarding'
     | '/pricing'
+    | '/dashboard/admin'
     | '/dashboard/billing'
     | '/solutions/$slug'
     | '/dashboard/'
@@ -189,6 +199,7 @@ export interface FileRouteTypes {
     | '/features'
     | '/onboarding'
     | '/pricing'
+    | '/dashboard/admin'
     | '/dashboard/billing'
     | '/solutions/$slug'
     | '/dashboard'
@@ -207,6 +218,7 @@ export interface FileRouteTypes {
     | '/features'
     | '/onboarding'
     | '/pricing'
+    | '/dashboard/admin'
     | '/dashboard/billing'
     | '/solutions/$slug'
     | '/dashboard/'
@@ -288,6 +300,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/admin': {
+      id: '/dashboard/admin'
+      path: '/admin'
+      fullPath: '/dashboard/admin'
+      preLoaderRoute: typeof DashboardAdminRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/billing': {
       id: '/dashboard/billing'
       path: '/billing'
@@ -348,6 +367,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface DashboardRouteChildren {
+  DashboardAdminRoute: typeof DashboardAdminRoute
   DashboardBillingRoute: typeof DashboardBillingRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardBotBotIdCustomizeRoute: typeof DashboardBotBotIdCustomizeRoute
@@ -358,6 +378,7 @@ interface DashboardRouteChildren {
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardAdminRoute: DashboardAdminRoute,
   DashboardBillingRoute: DashboardBillingRoute,
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardBotBotIdCustomizeRoute: DashboardBotBotIdCustomizeRoute,
