@@ -191,14 +191,22 @@ export function chunkText(
   wordsPerChunk = 400,
   overlap = 40,
 ): string[] {
-  const words = text.split(/\s+/).filter(Boolean);
+  // Remove embedded images/data URIs and very long tokens that blow the embedding size limit.
+  const cleaned = text
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
+    .replace(/data:[a-z/+.-]+;base64,[A-Za-z0-9+/=]+/gi, " ")
+    .replace(/\]\((https?:\/\/[^)\s]{120,})\)/g, "]");
+  const words = cleaned
+    .split(/\s+/)
+    .filter(Boolean)
+    .flatMap((w) => (w.length > 200 ? (w.match(/.{1,200}/g) ?? []) : [w]));
   if (words.length === 0) return [];
   const chunks: string[] = [];
   const step = Math.max(1, wordsPerChunk - overlap);
   for (let start = 0; start < words.length; start += step) {
     const slice = words.slice(start, start + wordsPerChunk);
     if (slice.length < 20 && chunks.length > 0) break;
-    chunks.push(slice.join(" "));
+    chunks.push(slice.join(" ").slice(0, 6000));
     if (start + wordsPerChunk >= words.length) break;
   }
   return chunks;

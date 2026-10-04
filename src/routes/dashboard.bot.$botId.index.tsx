@@ -33,7 +33,13 @@ function Overview() {
   }, [bot, syncing]);
 
   if (bot.isLoading) return <p className="text-muted-foreground">Loading…</p>;
-  if (!bot.data) return <p className="text-destructive">Chatbot not found.</p>;
+  if (!bot.data)
+    return (
+      <div className="space-y-3">
+        <p className="text-destructive">This chatbot isn't in your account.</p>
+        <Button onClick={() => window.location.assign("/dashboard")}>Go to my chatbots</Button>
+      </div>
+    );
   const b = bot.data;
   const plan = getPlan(b.plan);
 
