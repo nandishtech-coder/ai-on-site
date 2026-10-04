@@ -7,6 +7,18 @@ export const AVATARS: Record<string, string> = {
   bot: "🤖",
   smile: "😊",
   headset: "🎧",
+  friendly: "🙂",
+  happy: "😄",
+  cheerful: "😁",
+  wink: "😉",
+  cool: "😎",
+  clever: "🤓",
+  thoughtful: "🤔",
+  professional: "🧑‍💼",
+  support: "🧑‍💻",
+  expert: "🧑‍🏫",
+  guide: "🧑‍🚀",
+  helper: "🙋",
 };
 
 export const botsQuery = () =>

@@ -6,7 +6,12 @@
   window.__helixLoaded = true;
   var origin = new URL(script.src).origin;
   var api = origin + "/api/public/chat";
-  var AVATARS = { spark: "✦", bot: "🤖", smile: "😊", headset: "🎧" };
+  var AVATARS = {
+    spark: "✦", bot: "🤖", smile: "😊", headset: "🎧",
+    friendly: "🙂", happy: "😄", cheerful: "😁", wink: "😉",
+    cool: "😎", clever: "🤓", thoughtful: "🤔", professional: "🧑‍💼",
+    support: "🧑‍💻", expert: "🧑‍🏫", guide: "🧑‍🚀", helper: "🙋"
+  };
 
   fetch(api + "?botId=" + encodeURIComponent(botId))
     .then(function (r) { return r.ok ? r.json() : null; })

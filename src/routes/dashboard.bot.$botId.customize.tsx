@@ -128,16 +128,20 @@ function Customize() {
             </div>
             <div className="space-y-2">
               <Label>Avatar</Label>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 {Object.entries(AVATARS).map(([key, icon]) => (
-                  <button
+                  <Button
                     key={key}
                     type="button"
+                    variant="outline"
+                    size="icon"
                     onClick={() => set("avatar_key", key)}
-                    className={`flex h-11 w-11 items-center justify-center rounded-full border text-lg ${form.avatar_key === key ? "border-primary ring-2 ring-primary/30" : "border-border"}`}
+                    aria-label={`Use ${key} avatar`}
+                    title={`${key.charAt(0).toUpperCase()}${key.slice(1)}`}
+                    className={`h-11 w-11 rounded-full text-lg ${form.avatar_key === key ? "border-primary ring-2 ring-primary/30" : ""}`}
                   >
                     {icon}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
