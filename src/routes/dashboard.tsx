@@ -63,6 +63,11 @@ function DashboardLayout() {
     return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Loading…</div>;
   }
 
+  if (isAdmin.isLoading) {
+    return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Loading…</div>;
+  }
+
+  const adminOnly = isAdmin.data?.isAdmin === true;
   const botId = params.botId ?? bots.data?.[0]?.id;
 
   const sidebar = (
@@ -78,7 +83,7 @@ function DashboardLayout() {
           <PanelLeftClose className={`h-4 w-4 transition ${collapsed ? "rotate-180" : ""}`} />
         </button>
       </div>
-      {!collapsed && (
+      {!adminOnly && !collapsed && (
         <div className="mb-3 px-1">
           <p className="mb-1 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">My Bots</p>
           <select
@@ -97,7 +102,7 @@ function DashboardLayout() {
           </Link>
         </div>
       )}
-      {botId &&
+      {!adminOnly && botId &&
         NAV.map((item) => (
           <Link
             key={item.to}
@@ -112,16 +117,18 @@ function DashboardLayout() {
             {!collapsed && item.label}
           </Link>
         ))}
-      <Link
-        to="/dashboard/billing"
-        onClick={() => setMobileOpen(false)}
-        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
-        activeProps={{ className: "bg-muted text-foreground font-medium" }}
-      >
-        <CreditCard className="h-4 w-4 shrink-0" />
-        {!collapsed && "Billing & Account"}
-      </Link>
-      {isAdmin.data?.isAdmin && (
+      {!adminOnly && (
+        <Link
+          to="/dashboard/billing"
+          onClick={() => setMobileOpen(false)}
+          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+          activeProps={{ className: "bg-muted text-foreground font-medium" }}
+        >
+          <CreditCard className="h-4 w-4 shrink-0" />
+          {!collapsed && "Billing & Account"}
+        </Link>
+      )}
+      {adminOnly && (
         <Link
           to="/dashboard/admin"
           onClick={() => setMobileOpen(false)}
