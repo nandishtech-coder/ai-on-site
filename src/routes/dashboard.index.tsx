@@ -18,7 +18,7 @@ function DashboardIndex() {
 
   useEffect(() => {
     if (admin.data?.isAdmin) {
-      void navigate({ to: "/dashboard/admin", replace: true });
+      void navigate({ to: "/dashboard/admin/overview", replace: true });
       return;
     }
     if (!data) return;

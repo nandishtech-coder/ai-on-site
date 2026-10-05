@@ -1,0 +1,3 @@
+- [ ] Add admin-wide overview, chatbot inventory, and usage data with server-side role checks.
+- [ ] Add the three new admin pages and keep credit management as Users & Credits.
+- [ ] Show four admin-only menu links and verify the result.

@@ -12,3 +12,4 @@
 - Use Firecrawl through the linked gateway as the primary full-site reader, with the same-origin built-in crawler as fallback, because customer sites may be JavaScript-rendered or have complex sitemaps.
 - Wait briefly for client-rendered site sections during crawling and include full catalog-page chunks for service/price questions, because initial markdown and top semantic matches can omit visible product details.
 - Reuse embeddings for unchanged website chunks during re-sync and never discard previous training before replacements are ready, so temporary AI-credit failures do not damage a working bot.
+- Serve cross-account admin reporting through authenticated server functions with a server-verified admin role before privileged reads, because browser-only navigation cannot protect user data.
