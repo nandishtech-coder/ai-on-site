@@ -53,9 +53,9 @@ function DashboardLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const params = useParams({ strict: false }) as { botId?: string };
-  const bots = useQuery({ ...botsQuery(), enabled: !!session && isAdmin.data?.isAdmin === false });
   const checkAdminFn = useServerFn(checkAdmin);
   const isAdmin = useQuery({ queryKey: ["is-admin"], queryFn: () => checkAdminFn(), enabled: !!session });
+  const bots = useQuery({ ...botsQuery(), enabled: !!session && isAdmin.data?.isAdmin === false });
 
   useEffect(() => {
     if (!loading && !session) void navigate({ to: "/auth", search: { mode: "login" } as never });
