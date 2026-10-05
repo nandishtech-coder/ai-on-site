@@ -53,7 +53,7 @@ function DashboardLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const params = useParams({ strict: false }) as { botId?: string };
-  const bots = useQuery({ ...botsQuery(), enabled: !!session });
+  const bots = useQuery({ ...botsQuery(), enabled: !!session && isAdmin.data?.isAdmin === false });
   const checkAdminFn = useServerFn(checkAdmin);
   const isAdmin = useQuery({ queryKey: ["is-admin"], queryFn: () => checkAdminFn(), enabled: !!session });
 
@@ -65,8 +65,11 @@ function DashboardLayout() {
     return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Loading…</div>;
   }
 
-  if (isAdmin.isLoading) {
+  if (isAdmin.isPending) {
     return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Loading…</div>;
+  }
+  if (isAdmin.error) {
+    return <div className="flex min-h-screen items-center justify-center px-4 text-destructive">Could not verify your account access. Please refresh and try again.</div>;
   }
 
   const adminOnly = isAdmin.data?.isAdmin === true;
@@ -76,7 +79,6 @@ function DashboardLayout() {
     <nav className="flex h-full flex-col gap-1 p-3">
       <div className="mb-4 flex items-center gap-2 px-2 font-display font-semibold">
         <HelixMark />
-        {!collapsed && <span>Helix AI</span>}
         <button
           onClick={() => setCollapsed((c) => !c)}
           className="ml-auto hidden rounded-md p-1 text-muted-foreground hover:bg-muted md:block"
