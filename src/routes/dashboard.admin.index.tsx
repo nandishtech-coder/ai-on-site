@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { addUserCredits, checkAdmin, listUsersWithCredits } from "@/lib/admin.functions";
 import { getPlan } from "@/lib/plans";
 
-export const Route = createFileRoute("/dashboard/admin")({
+export const Route = createFileRoute("/dashboard/admin/")({
   head: () => ({ meta: [{ title: "Users & Credits — Helix Admin" }, { name: "description", content: "Manage user message credits in Helix." }, { property: "og:title", content: "Users & Credits — Helix Admin" }, { property: "og:description", content: "Manage user message credits in Helix." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: AdminPage,
 });
