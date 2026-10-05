@@ -10,6 +10,8 @@ import {
   Paintbrush,
   PanelLeftClose,
   Plus,
+  Activity,
+  Bot,
   ShieldCheck,
   UserPlus,
 } from "lucide-react";
@@ -129,15 +131,20 @@ function DashboardLayout() {
         </Link>
       )}
       {adminOnly && (
-        <Link
-          to="/dashboard/admin"
-          onClick={() => setMobileOpen(false)}
-          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
-          activeProps={{ className: "bg-muted text-foreground font-medium" }}
-        >
-          <ShieldCheck className="h-4 w-4 shrink-0" />
-          {!collapsed && "Admin · Credits"}
-        </Link>
+        <>
+          <Link to="/dashboard/admin/overview" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground" activeProps={{ className: "bg-muted text-foreground font-medium" }}>
+            <BarChart3 className="h-4 w-4 shrink-0" />{!collapsed && "Overview"}
+          </Link>
+          <Link to="/dashboard/admin" activeOptions={{ exact: true }} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground" activeProps={{ className: "bg-muted text-foreground font-medium" }}>
+            <ShieldCheck className="h-4 w-4 shrink-0" />{!collapsed && "Users & Credits"}
+          </Link>
+          <Link to="/dashboard/admin/chatbots" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground" activeProps={{ className: "bg-muted text-foreground font-medium" }}>
+            <Bot className="h-4 w-4 shrink-0" />{!collapsed && "Chatbots"}
+          </Link>
+          <Link to="/dashboard/admin/usage" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground" activeProps={{ className: "bg-muted text-foreground font-medium" }}>
+            <Activity className="h-4 w-4 shrink-0" />{!collapsed && "System Usage"}
+          </Link>
+        </>
       )}
       <button
         onClick={async () => {

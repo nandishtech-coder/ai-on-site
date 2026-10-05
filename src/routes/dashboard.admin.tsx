@@ -10,6 +10,7 @@ import { addUserCredits, checkAdmin, listUsersWithCredits } from "@/lib/admin.fu
 import { getPlan } from "@/lib/plans";
 
 export const Route = createFileRoute("/dashboard/admin")({
+  head: () => ({ meta: [{ title: "Users & Credits — Helix Admin" }, { name: "description", content: "Manage user message credits in Helix." }, { property: "og:title", content: "Users & Credits — Helix Admin" }, { property: "og:description", content: "Manage user message credits in Helix." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: AdminPage,
 });
 
@@ -51,7 +52,7 @@ function AdminPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-display text-2xl font-semibold">Admin · User credits</h1>
+        <h1 className="font-display text-2xl font-semibold">Users & Credits</h1>
         <p className="text-sm text-muted-foreground">
           Give users extra chatbot messages on top of their plan. 1 credit = 1 message.
         </p>
