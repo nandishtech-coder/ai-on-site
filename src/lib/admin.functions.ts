@@ -18,6 +18,56 @@ export const checkAdmin = createServerFn({ method: "GET" })
     return { isAdmin: !!data };
   });
 
+export const getAdminReport = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.supabase as never, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    type BotRow = {
+      id: string;
+      user_id: string;
+      name: string;
+      domain: string;
+      plan: string;
+      crawl_status: string;
+      crawl_error: string | null;
+      pages_crawled: number;
+      message_count: number;
+      last_crawled_at: string | null;
+      created_at: string;
+      is_active: boolean;
+    };
+    const bots: BotRow[] = [];
+    for (let start = 0; ; start += 1000) {
+      const { data, error } = await supabaseAdmin.from("bots")
+        .select("id,user_id,name,domain,plan,crawl_status,crawl_error,pages_crawled,message_count,last_crawled_at,created_at,is_active")
+        .order("created_at", { ascending: false }).range(start, start + 999);
+      if (error) throw new Error(error.message);
+      const batch = data ?? [];
+      bots.push(...batch);
+      if (batch.length < 1000) break;
+    }
+    const users: { id: string; email: string }[] = [];
+    for (let page = 1; ; page++) {
+      const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 1000 });
+      if (error) throw new Error(error.message);
+      users.push(...data.users.map((user) => ({ id: user.id, email: user.email ?? "" })));
+      if (data.users.length < 1000) break;
+    }
+    const [{ count: conversations, error: conversationError }, { count: leads, error: leadError }] = await Promise.all([
+      supabaseAdmin.from("conversations").select("id", { count: "exact", head: true }),
+      supabaseAdmin.from("leads").select("id", { count: "exact", head: true }),
+    ]);
+    if (conversationError || leadError) throw new Error(conversationError?.message ?? leadError?.message);
+    const emails = new Map(users.map((user) => [user.id, user.email]));
+    return {
+      users: users.length,
+      conversations: conversations ?? 0,
+      leads: leads ?? 0,
+      bots: bots.map((bot) => ({ ...bot, owner_email: emails.get(bot.user_id) ?? "Unknown user" })),
+    };
+  });
+
 export const listUsersWithCredits = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
