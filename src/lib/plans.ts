@@ -17,7 +17,7 @@ export const PLANS: Plan[] = [
   {
     id: "free",
     name: "Free",
-    price: "$0",
+    price: "₹0",
     cadence: "/mo",
     tagline: "Try Helix on a single site.",
     bots: 1,
@@ -34,7 +34,7 @@ export const PLANS: Plan[] = [
   {
     id: "pro",
     name: "Pro",
-    price: "$29",
+    price: "₹2,499",
     cadence: "/mo",
     tagline: "For growing teams and busy sites.",
     bots: 3,
@@ -53,7 +53,7 @@ export const PLANS: Plan[] = [
   {
     id: "enterprise",
     name: "Enterprise",
-    price: "$99",
+    price: "₹7,999",
     cadence: "/mo",
     tagline: "Large sites that change every week.",
     bots: 25,
