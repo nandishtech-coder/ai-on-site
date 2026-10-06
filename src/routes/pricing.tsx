@@ -11,7 +11,7 @@ export const Route = createFileRoute("/pricing")({
       {
         name: "description",
         content:
-          "Helix pricing: Free with 1 bot and 20 pages, Pro at $29/mo with 500 pages, Enterprise at $99/mo with unlimited pages and weekly re-crawls.",
+          "Helix pricing: Free with 1 bot and 20 pages, Pro at ₹2,499/mo with 500 pages, Enterprise at ₹7,999/mo with unlimited pages and weekly re-crawls.",
       },
       { property: "og:title", content: "Pricing — Helix AI" },
       {
