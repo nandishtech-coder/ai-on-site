@@ -210,6 +210,45 @@ export type Database = {
           },
         ]
       }
+      subscription_requests: {
+        Row: {
+          amount: string
+          created_at: string
+          email: string | null
+          id: string
+          note: string | null
+          payment_reference: string
+          plan: string
+          reviewed_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          amount: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          note?: string | null
+          payment_reference: string
+          plan: string
+          reviewed_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          amount?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          note?: string | null
+          payment_reference?: string
+          plan?: string
+          reviewed_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_credits: {
         Row: {
           extra_messages: number
