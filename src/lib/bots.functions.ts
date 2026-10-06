@@ -37,7 +37,14 @@ export const createBot = createServerFn({ method: "POST" })
       .eq("user_id", context.userId);
     if (countError) throw new Error(countError.message);
 
-    const plan = getPlan(existing?.[0]?.plan ?? "free");
+    const { data: approved } = await context.supabase
+      .from("subscription_requests")
+      .select("plan")
+      .eq("user_id", context.userId)
+      .eq("status", "approved")
+      .order("reviewed_at", { ascending: false })
+      .limit(1);
+    const plan = getPlan(approved?.[0]?.plan ?? existing?.[0]?.plan ?? "free");
     if ((existing?.length ?? 0) >= plan.bots) {
       throw new Error(
         `Your ${plan.name} plan includes ${plan.bots} chatbot${plan.bots > 1 ? "s" : ""}. Upgrade to add more.`,
@@ -52,6 +59,8 @@ export const createBot = createServerFn({ method: "POST" })
         name: `${host} Assistant`,
         notification_email: context.claims?.email ?? null,
         crawl_status: "pending",
+        plan: plan.id,
+        show_branding: plan.id === "free",
       })
       .select("id")
       .single();

@@ -23,6 +23,7 @@ import { Route as ApiPublicChatRouteImport } from './routes/api/public/chat'
 import { Route as DashboardAdminIndexRouteImport } from './routes/dashboard.admin.index'
 import { Route as DashboardAdminChatbotsRouteImport } from './routes/dashboard.admin.chatbots'
 import { Route as DashboardAdminOverviewRouteImport } from './routes/dashboard.admin.overview'
+import { Route as DashboardAdminSubscriptionsRouteImport } from './routes/dashboard.admin.subscriptions'
 import { Route as DashboardAdminUsageRouteImport } from './routes/dashboard.admin.usage'
 import { Route as DashboardBotBotIdIndexRouteImport } from './routes/dashboard.bot.$botId.index'
 import { Route as DashboardBotBotIdCustomizeRouteImport } from './routes/dashboard.bot.$botId.customize'
@@ -100,6 +101,12 @@ const DashboardAdminOverviewRoute = DashboardAdminOverviewRouteImport.update({
   path: '/admin/overview',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardAdminSubscriptionsRoute =
+  DashboardAdminSubscriptionsRouteImport.update({
+    id: '/admin/subscriptions',
+    path: '/admin/subscriptions',
+    getParentRoute: () => DashboardRoute,
+  } as any)
 const DashboardAdminUsageRoute = DashboardAdminUsageRouteImport.update({
   id: '/admin/usage',
   path: '/admin/usage',
@@ -146,6 +153,7 @@ export interface FileRoutesByFullPath {
   '/api/public/chat': typeof ApiPublicChatRoute
   '/dashboard/admin/chatbots': typeof DashboardAdminChatbotsRoute
   '/dashboard/admin/overview': typeof DashboardAdminOverviewRoute
+  '/dashboard/admin/subscriptions': typeof DashboardAdminSubscriptionsRoute
   '/dashboard/admin/usage': typeof DashboardAdminUsageRoute
   '/dashboard/admin/': typeof DashboardAdminIndexRoute
   '/dashboard/bot/$botId/customize': typeof DashboardBotBotIdCustomizeRoute
@@ -167,6 +175,7 @@ export interface FileRoutesByTo {
   '/api/public/chat': typeof ApiPublicChatRoute
   '/dashboard/admin/chatbots': typeof DashboardAdminChatbotsRoute
   '/dashboard/admin/overview': typeof DashboardAdminOverviewRoute
+  '/dashboard/admin/subscriptions': typeof DashboardAdminSubscriptionsRoute
   '/dashboard/admin/usage': typeof DashboardAdminUsageRoute
   '/dashboard/admin': typeof DashboardAdminIndexRoute
   '/dashboard/bot/$botId/customize': typeof DashboardBotBotIdCustomizeRoute
@@ -190,6 +199,7 @@ export interface FileRoutesById {
   '/api/public/chat': typeof ApiPublicChatRoute
   '/dashboard/admin/chatbots': typeof DashboardAdminChatbotsRoute
   '/dashboard/admin/overview': typeof DashboardAdminOverviewRoute
+  '/dashboard/admin/subscriptions': typeof DashboardAdminSubscriptionsRoute
   '/dashboard/admin/usage': typeof DashboardAdminUsageRoute
   '/dashboard/admin/': typeof DashboardAdminIndexRoute
   '/dashboard/bot/$botId/customize': typeof DashboardBotBotIdCustomizeRoute
@@ -214,6 +224,7 @@ export interface FileRouteTypes {
     | '/api/public/chat'
     | '/dashboard/admin/chatbots'
     | '/dashboard/admin/overview'
+    | '/dashboard/admin/subscriptions'
     | '/dashboard/admin/usage'
     | '/dashboard/admin/'
     | '/dashboard/bot/$botId/customize'
@@ -235,6 +246,7 @@ export interface FileRouteTypes {
     | '/api/public/chat'
     | '/dashboard/admin/chatbots'
     | '/dashboard/admin/overview'
+    | '/dashboard/admin/subscriptions'
     | '/dashboard/admin/usage'
     | '/dashboard/admin'
     | '/dashboard/bot/$botId/customize'
@@ -257,6 +269,7 @@ export interface FileRouteTypes {
     | '/api/public/chat'
     | '/dashboard/admin/chatbots'
     | '/dashboard/admin/overview'
+    | '/dashboard/admin/subscriptions'
     | '/dashboard/admin/usage'
     | '/dashboard/admin/'
     | '/dashboard/bot/$botId/customize'
@@ -378,6 +391,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardAdminOverviewRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/admin/subscriptions': {
+      id: '/dashboard/admin/subscriptions'
+      path: '/admin/subscriptions'
+      fullPath: '/dashboard/admin/subscriptions'
+      preLoaderRoute: typeof DashboardAdminSubscriptionsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/admin/usage': {
       id: '/dashboard/admin/usage'
       path: '/admin/usage'
@@ -428,6 +448,7 @@ interface DashboardRouteChildren {
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardAdminChatbotsRoute: typeof DashboardAdminChatbotsRoute
   DashboardAdminOverviewRoute: typeof DashboardAdminOverviewRoute
+  DashboardAdminSubscriptionsRoute: typeof DashboardAdminSubscriptionsRoute
   DashboardAdminUsageRoute: typeof DashboardAdminUsageRoute
   DashboardAdminIndexRoute: typeof DashboardAdminIndexRoute
   DashboardBotBotIdCustomizeRoute: typeof DashboardBotBotIdCustomizeRoute
@@ -442,6 +463,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardAdminChatbotsRoute: DashboardAdminChatbotsRoute,
   DashboardAdminOverviewRoute: DashboardAdminOverviewRoute,
+  DashboardAdminSubscriptionsRoute: DashboardAdminSubscriptionsRoute,
   DashboardAdminUsageRoute: DashboardAdminUsageRoute,
   DashboardAdminIndexRoute: DashboardAdminIndexRoute,
   DashboardBotBotIdCustomizeRoute: DashboardBotBotIdCustomizeRoute,
