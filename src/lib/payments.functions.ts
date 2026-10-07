@@ -47,7 +47,13 @@ export const updatePaymentSettings = createServerFn({ method: "POST" })
 
 export const createStripeCheckout = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ plan: z.enum(["pro", "enterprise"]), origin: z.string().url() }).parse(d))
+  .inputValidator((d) => z.object({
+    plan: z.enum(["pro", "enterprise"]),
+    origin: z.string().url(),
+    name: z.string().trim().min(1).max(100),
+    email: z.string().trim().email().max(255),
+    phone: z.string().trim().regex(/^[0-9+\-\s]{7,20}$/),
+  }).parse(d))
   .handler(async ({ data, context }) => {
     const key = process.env["STRIPE_SECRET_KEY"];
     const { data: settings } = await context.supabase.from("payment_settings").select("stripe_enabled").eq("id", 1).maybeSingle();
@@ -61,15 +67,17 @@ export const createStripeCheckout = createServerFn({ method: "POST" })
     const body = new URLSearchParams({
       mode: "payment",
       success_url: `${data.origin}/dashboard/billing?paid=1`,
-      cancel_url: `${data.origin}/dashboard/billing`,
+      cancel_url: `${data.origin}/dashboard/billing?paid=0`,
       "line_items[0][quantity]": "1",
       "line_items[0][price_data][currency]": "inr",
       "line_items[0][price_data][unit_amount]": String(amount),
       "line_items[0][price_data][product_data][name]": `Helix ${plan.name} (1 month)`,
       client_reference_id: context.userId,
+      customer_email: data.email,
+      "metadata[name]": data.name,
+      "metadata[phone]": data.phone,
     });
-    const email = context.claims?.email as string | undefined;
-    if (email) body.set("customer_email", email);
+    const email = data.email;
     const res = await fetch("https://api.stripe.com/v1/checkout/sessions", {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/x-www-form-urlencoded" },
@@ -79,7 +87,7 @@ export const createStripeCheckout = createServerFn({ method: "POST" })
     if (!res.ok || !json.url || !json.id) throw new Error(json.error?.message ?? "Could not start card payment.");
     const { error } = await context.supabase.from("subscription_requests").insert({
       user_id: context.userId, email: email ?? null, plan: plan.id, amount: plan.price,
-      payment_reference: `stripe:${json.id}`, note: "Paid by card (Stripe) — check Stripe dashboard", status: "pending",
+      payment_reference: `stripe:${json.id}`, note: `Stripe — ${data.name}, ${data.phone}. Check Stripe dashboard`, status: "pending",
     });
     if (error) throw new Error(error.message);
     return { url: json.url };
