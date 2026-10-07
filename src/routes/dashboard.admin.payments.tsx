@@ -37,7 +37,10 @@ function PaymentsPage() {
 
   function onQr(file?: File) {
     if (!file) return;
-    if (file.size > 1_000_000) return toast.error("Please use an image under 1 MB.");
+    if (file.size > 1_000_000) {
+      toast.error("Please use an image under 1 MB.");
+      return;
+    }
     const r = new FileReader();
     r.onload = () => setForm((f) => ({ ...f, qr_image: String(r.result) }));
     r.readAsDataURL(file);
