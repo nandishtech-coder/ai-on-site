@@ -93,6 +93,11 @@ function Billing() {
         <h1 className="font-display text-2xl font-semibold">Billing & Account</h1>
         <p className="text-sm text-muted-foreground">Signed in as {user?.email}</p>
       </div>
+      {result && (
+        <div className={`rounded-2xl border p-4 text-sm ${result === "ok" ? "border-primary/40 bg-primary/5" : "border-destructive/40 bg-destructive/5 text-destructive"}`}>
+          {result === "ok" ? "Payment successful! The admin will verify it and switch on your plan shortly." : "Payment was cancelled or failed. No money was taken — you can try again."}
+        </div>
+      )}
       {pending && (
         <div className="rounded-2xl border border-primary/40 bg-primary/5 p-4 text-sm">
           Your {getPlan(pending.plan).name} payment ({pending.amount}) is waiting for admin approval.
@@ -136,10 +141,20 @@ function Billing() {
           </DialogHeader>
           {!pay.data ? <p className="text-sm text-muted-foreground">Loading…</p> : (
             <div className="space-y-4">
-              {cardOn && (
-                <Button className="w-full" variant="outline" disabled={sending} onClick={payByCard}>Pay by card (Stripe)</Button>
+              {cardOn && !cardForm && (
+                <Button className="w-full" variant="outline" disabled={sending} onClick={() => setCardForm({ name: "", email: user?.email ?? "", phone: "" })}>Pay online (Stripe)</Button>
               )}
-              {pay.data.upi_enabled && (
+              {cardOn && cardForm && (
+                <div className="space-y-2 rounded-xl border border-border p-3">
+                  <p className="text-sm font-medium">Your details</p>
+                  <Input placeholder="Full name" value={cardForm.name} onChange={(e) => setCardForm({ ...cardForm, name: e.target.value })} />
+                  <Input type="email" placeholder="Email" value={cardForm.email} onChange={(e) => setCardForm({ ...cardForm, email: e.target.value })} />
+                  <Input type="tel" placeholder="Mobile number" value={cardForm.phone} onChange={(e) => setCardForm({ ...cardForm, phone: e.target.value })} />
+                  <Button className="w-full" disabled={sending || !cardValid} onClick={payByCard}>{sending ? "Opening payment…" : `Proceed to pay ${selected?.price}`}</Button>
+                  <Button className="w-full" variant="ghost" size="sm" onClick={() => setCardForm(null)}>Back</Button>
+                </div>
+              )}
+              {pay.data.upi_enabled && !cardForm && (
                 <div className="space-y-3">
                   <div className="rounded-xl border border-border bg-muted/40 p-3 text-sm">
                     {pay.data.qr_image && <img src={pay.data.qr_image} alt="UPI QR code" className="mx-auto mb-2 h-48 w-48 rounded-lg bg-background object-contain" />}
@@ -147,6 +162,9 @@ function Billing() {
                     {pay.data.upi_name && <p className="text-xs text-muted-foreground">Name: {pay.data.upi_name}</p>}
                     <p className="text-xs text-muted-foreground">Scan or pay {selected?.price}, add your email in the payment note.</p>
                   </div>
+                  {upiLink && (
+                    <Button asChild className="w-full" variant="outline"><a href={upiLink}>Open UPI app (GPay, PhonePe, Paytm)</a></Button>
+                  )}
                   <Input placeholder="UTR / transaction number" value={reference} onChange={(e) => setReference(e.target.value)} />
                   <Textarea placeholder="Anything the admin should know (optional)" value={note} onChange={(e) => setNote(e.target.value)} />
                   <Button className="w-full" disabled={sending || reference.trim().length < 4} onClick={submit}>
