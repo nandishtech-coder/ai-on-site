@@ -146,6 +146,9 @@ function DashboardLayout() {
           <Link to="/dashboard/admin/subscriptions" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground" activeProps={{ className: "bg-muted text-foreground font-medium" }}>
             <CreditCard className="h-4 w-4 shrink-0" />{!collapsed && "Subscriptions"}
           </Link>
+          <Link to="/dashboard/admin/payments" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground" activeProps={{ className: "bg-muted text-foreground font-medium" }}>
+            <ShieldCheck className="h-4 w-4 shrink-0" />{!collapsed && "Payment Methods"}
+          </Link>
           <Link to="/dashboard/admin/usage" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground" activeProps={{ className: "bg-muted text-foreground font-medium" }}>
             <Activity className="h-4 w-4 shrink-0" />{!collapsed && "System Usage"}
           </Link>
