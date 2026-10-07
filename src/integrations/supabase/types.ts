@@ -169,6 +169,36 @@ export type Database = {
           },
         ]
       }
+      payment_settings: {
+        Row: {
+          id: number
+          qr_image: string | null
+          stripe_enabled: boolean
+          updated_at: string
+          upi_enabled: boolean
+          upi_id: string | null
+          upi_name: string | null
+        }
+        Insert: {
+          id?: number
+          qr_image?: string | null
+          stripe_enabled?: boolean
+          updated_at?: string
+          upi_enabled?: boolean
+          upi_id?: string | null
+          upi_name?: string | null
+        }
+        Update: {
+          id?: number
+          qr_image?: string | null
+          stripe_enabled?: boolean
+          updated_at?: string
+          upi_enabled?: boolean
+          upi_id?: string | null
+          upi_name?: string | null
+        }
+        Relationships: []
+      }
       site_chunks: {
         Row: {
           bot_id: string

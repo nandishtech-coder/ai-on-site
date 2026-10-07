@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { botsQuery } from "@/lib/bot-data";
 import { PLANS, getPlan, type Plan } from "@/lib/plans";
 import { mySubscriptionRequests, requestSubscription } from "@/lib/subscriptions.functions";
+import { createStripeCheckout, getPaymentSettings } from "@/lib/payments.functions";
 
 export const Route = createFileRoute("/dashboard/billing")({
   head: () => ({ meta: [{ title: "Billing & Account — Helix AI" }, { name: "description", content: "Your Helix plan, usage and upgrades." }, { property: "og:title", content: "Billing & Account — Helix AI" }, { property: "og:description", content: "Your Helix plan, usage and upgrades." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
@@ -25,6 +26,21 @@ function Billing() {
   const mineFn = useServerFn(mySubscriptionRequests);
   const requestFn = useServerFn(requestSubscription);
   const mine = useQuery({ queryKey: ["my-subscription"], queryFn: () => mineFn() });
+  const payFn = useServerFn(getPaymentSettings);
+  const checkoutFn = useServerFn(createStripeCheckout);
+  const pay = useQuery({ queryKey: ["payment-settings"], queryFn: () => payFn() });
+  const cardOn = !!pay.data?.stripe_enabled && !!pay.data?.stripe_ready;
+  async function payByCard() {
+    if (!selected || selected.id === "free") return;
+    setSending(true);
+    try {
+      const { url } = await checkoutFn({ data: { plan: selected.id, origin: window.location.origin } });
+      window.location.href = url;
+    } catch (e) {
+      toast.error((e as Error).message);
+      setSending(false);
+    }
+  }
   const [selected, setSelected] = useState<Plan | null>(null);
   const [reference, setReference] = useState("");
   const [note, setNote] = useState("");
@@ -99,24 +115,36 @@ function Billing() {
       </div>
 
       <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Pay for {selected?.name} — {selected?.price}{selected?.cadence}</DialogTitle>
             <DialogDescription>
-              Pay {selected?.price} by UPI or bank transfer, then enter the transaction / UTR number below. The admin will check it and switch on your {selected?.name} features.
+              After payment, the admin checks it and switches on your {selected?.name} features.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-3">
-            <div className="rounded-xl border border-border bg-muted/40 p-3 text-sm">
-              <p className="font-medium">UPI ID: <span className="font-mono">helix@upi</span></p>
-              <p className="text-xs text-muted-foreground">Add your name or email in the payment note.</p>
+          {!pay.data ? <p className="text-sm text-muted-foreground">Loading…</p> : (
+            <div className="space-y-4">
+              {cardOn && (
+                <Button className="w-full" variant="outline" disabled={sending} onClick={payByCard}>Pay by card (Stripe)</Button>
+              )}
+              {pay.data.upi_enabled && (
+                <div className="space-y-3">
+                  <div className="rounded-xl border border-border bg-muted/40 p-3 text-sm">
+                    {pay.data.qr_image && <img src={pay.data.qr_image} alt="UPI QR code" className="mx-auto mb-2 h-48 w-48 rounded-lg bg-background object-contain" />}
+                    <p className="font-medium">UPI ID: <span className="font-mono">{pay.data.upi_id || "Not added yet"}</span></p>
+                    {pay.data.upi_name && <p className="text-xs text-muted-foreground">Name: {pay.data.upi_name}</p>}
+                    <p className="text-xs text-muted-foreground">Scan or pay {selected?.price}, add your email in the payment note.</p>
+                  </div>
+                  <Input placeholder="UTR / transaction number" value={reference} onChange={(e) => setReference(e.target.value)} />
+                  <Textarea placeholder="Anything the admin should know (optional)" value={note} onChange={(e) => setNote(e.target.value)} />
+                  <Button className="w-full" disabled={sending || reference.trim().length < 4} onClick={submit}>
+                    {sending ? "Sending…" : "I've paid — send for approval"}
+                  </Button>
+                </div>
+              )}
+              {!cardOn && !pay.data.upi_enabled && <p className="text-sm text-muted-foreground">Payments are not open right now. Please try again later.</p>}
             </div>
-            <Input placeholder="Transaction / UTR number" value={reference} onChange={(e) => setReference(e.target.value)} />
-            <Textarea placeholder="Anything the admin should know (optional)" value={note} onChange={(e) => setNote(e.target.value)} />
-            <Button className="w-full" disabled={sending || reference.trim().length < 4} onClick={submit}>
-              {sending ? "Sending…" : "I've paid — send for approval"}
-            </Button>
-          </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
