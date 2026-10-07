@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -30,11 +30,20 @@ function Billing() {
   const checkoutFn = useServerFn(createStripeCheckout);
   const pay = useQuery({ queryKey: ["payment-settings"], queryFn: () => payFn() });
   const cardOn = !!pay.data?.stripe_enabled && !!pay.data?.stripe_ready;
+  const [cardForm, setCardForm] = useState<null | { name: string; email: string; phone: string }>(null);
+  const [result, setResult] = useState<null | "ok" | "fail">(null);
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search).get("paid");
+    if (p === "1") setResult("ok");
+    else if (p === "0") setResult("fail");
+    if (p) window.history.replaceState(null, "", window.location.pathname);
+  }, []);
+  const cardValid = !!cardForm && cardForm.name.trim().length > 0 && /^\S+@\S+\.\S+$/.test(cardForm.email) && /^[0-9+\-\s]{7,20}$/.test(cardForm.phone);
   async function payByCard() {
-    if (!selected || selected.id === "free") return;
+    if (!selected || selected.id === "free" || !cardForm || !cardValid) return;
     setSending(true);
     try {
-      const { url } = await checkoutFn({ data: { plan: selected.id, origin: window.location.origin } });
+      const { url } = await checkoutFn({ data: { plan: selected.id, origin: window.location.origin, ...cardForm } });
       window.location.href = url;
     } catch (e) {
       toast.error((e as Error).message);
@@ -45,6 +54,9 @@ function Billing() {
   const [reference, setReference] = useState("");
   const [note, setNote] = useState("");
   const [sending, setSending] = useState(false);
+  const upiLink = pay.data?.upi_id && selected
+    ? `upi://pay?pa=${encodeURIComponent(pay.data.upi_id)}&pn=${encodeURIComponent(pay.data.upi_name || "Helix")}&am=${selected.price.replace(/[^\d]/g, "")}&cu=INR&tn=${encodeURIComponent(`Helix ${selected.name}`)}`
+    : "";
 
   const approved = mine.data?.find((r) => r.status === "approved");
   const pending = mine.data?.find((r) => r.status === "pending");
