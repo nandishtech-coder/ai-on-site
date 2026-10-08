@@ -73,7 +73,7 @@ export const listUsersWithCredits = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await assertAdmin(context.supabase as never, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const users: Awaited<ReturnType<typeof supabaseAdmin.auth.admin.listUsers>>["data"]["users"] = [];
+    const users: import("@supabase/supabase-js").User[] = [];
     for (let page = 1; page < 50; page++) {
       const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 1000 });
       if (error) throw new Error(error.message);
