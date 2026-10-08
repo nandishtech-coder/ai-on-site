@@ -73,8 +73,14 @@ export const listUsersWithCredits = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await assertAdmin(context.supabase as never, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: list, error } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
-    if (error) throw new Error(error.message);
+    const users: import("@supabase/supabase-js").User[] = [];
+    for (let page = 1; page < 50; page++) {
+      const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 1000 });
+      if (error) throw new Error(error.message);
+      users.push(...data.users);
+      if (data.users.length < 1000) break;
+    }
+    const list = { users };
     const [{ data: credits }, { data: bots }] = await Promise.all([
       supabaseAdmin.from("user_credits").select("user_id, extra_messages"),
       supabaseAdmin.from("bots").select("user_id, message_count, plan"),
