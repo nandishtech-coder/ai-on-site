@@ -1,4 +1,4 @@
-export const EMBEDDING_MODEL = "models/text-embedding-004";
+export const EMBEDDING_MODEL = "models/gemini-embedding-001";
 export const CHAT_MODEL = "gemini-1.5-flash";
 
 export function requireGeminiApiKey(): string {
@@ -15,14 +15,14 @@ export async function embedTexts(texts: string[]): Promise<number[][]> {
   for (let i = 0; i < texts.length; i += 32) {
     const batch = texts.slice(i, i + 32);
     
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:batchEmbedContents?key=${key}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/${EMBEDDING_MODEL}:batchEmbedContents?key=${key}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         requests: batch.map(text => ({
-          model: "models/text-embedding-004",
+          model: EMBEDDING_MODEL,
           content: { parts: [{ text }] }
         }))
       }),
