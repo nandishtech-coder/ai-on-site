@@ -1,29 +1,31 @@
-const GATEWAY = "https://ai.gateway.lovable.dev/v1";
+export const EMBEDDING_MODEL = "models/text-embedding-004";
+export const CHAT_MODEL = "gemini-1.5-flash";
 
-export const EMBEDDING_MODEL = "openai/text-embedding-3-small";
-export const CHAT_MODEL = "openai/gpt-6-astra";
-
-export function requireLovableApiKey(): string {
-  const key = process.env["LOVABLE_API_KEY"];
-  if (!key) throw new Error("LOVABLE_API_KEY is not configured");
+export function requireGeminiApiKey(): string {
+  const key = process.env["GEMINI_API_KEY"];
+  if (!key) throw new Error("GEMINI_API_KEY is not configured");
   return key;
 }
 
-/** Returns one 1536-dimension embedding per input string, in order. */
+/** Returns one 768-dimension embedding per input string, in order. */
 export async function embedTexts(texts: string[]): Promise<number[][]> {
-  const key = requireLovableApiKey();
+  const key = requireGeminiApiKey();
   const out: number[][] = [];
 
   for (let i = 0; i < texts.length; i += 32) {
     const batch = texts.slice(i, i + 32);
-    const response = await fetch(`${GATEWAY}/embeddings`, {
+    
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:batchEmbedContents?key=${key}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Lovable-API-Key": key,
-        "X-Lovable-AIG-SDK": "fetch",
       },
-      body: JSON.stringify({ model: EMBEDDING_MODEL, input: batch, dimensions: 1536 }),
+      body: JSON.stringify({
+        requests: batch.map(text => ({
+          model: "models/text-embedding-004",
+          content: { parts: [{ text }] }
+        }))
+      }),
     });
 
     if (!response.ok) {
@@ -31,48 +33,38 @@ export async function embedTexts(texts: string[]): Promise<number[][]> {
       throw new Error(`Embedding request failed [${response.status}]: ${body}`);
     }
 
-    const payload = (await response.json()) as {
-      data: { index: number; embedding: number[] }[];
-    };
-    const sorted = [...payload.data].sort((a, b) => a.index - b.index);
-    for (const item of sorted) out.push(item.embedding);
+    const payload = await response.json();
+    for (const item of payload.embeddings) {
+      out.push(item.values);
+    }
   }
 
   return out;
 }
 
 /**
- * Streams a grounded answer from the gateway Responses API and yields plain text deltas.
+ * Streams a grounded answer from Gemini API and yields plain text deltas.
  */
 export async function* streamGroundedAnswer(input: {
   system: string;
   messages: { role: "user" | "assistant"; content: string }[];
   signal?: AbortSignal;
 }): AsyncGenerator<string> {
-  const key = requireLovableApiKey();
+  const key = requireGeminiApiKey();
 
-  const response = await fetch(`${GATEWAY}/responses`, {
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${CHAT_MODEL}:streamGenerateContent?alt=sse&key=${key}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Lovable-API-Key": key,
-      "X-Lovable-AIG-SDK": "fetch",
     },
     signal: input.signal ?? null,
     body: JSON.stringify({
-      model: CHAT_MODEL,
-      stream: true,
-      store: false,
-      instructions: input.system,
-      reasoning: { effort: "low" },
-      input: input.messages.map((message) => ({
-        role: message.role,
-        content: [
-          {
-            type: message.role === "assistant" ? "output_text" : "input_text",
-            text: message.content,
-          },
-        ],
+      systemInstruction: {
+        parts: [{ text: input.system }]
+      },
+      contents: input.messages.map((message) => ({
+        role: message.role === "assistant" ? "model" : "user",
+        parts: [{ text: message.content }]
       })),
     }),
   });
@@ -100,12 +92,13 @@ export async function* streamGroundedAnswer(input: {
         const data = line.slice(5).trim();
         if (!data || data === "[DONE]") continue;
         try {
-          const event = JSON.parse(data) as { type?: string; delta?: string };
-          if (event.type === "response.output_text.delta" && typeof event.delta === "string") {
-            yield event.delta;
+          const event = JSON.parse(data);
+          const deltaText = event?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (deltaText) {
+            yield deltaText;
           }
         } catch {
-          // ignore keep-alive / non-JSON frames
+          // ignore parsing errors for partial chunks
         }
       }
     }

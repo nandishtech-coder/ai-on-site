@@ -23,12 +23,10 @@ type FirecrawlCrawlResult = {
 };
 
 function firecrawlHeaders(): HeadersInit | null {
-  const lovableKey = process.env["LOVABLE_API_KEY"];
   const connectionKey = process.env["FIRECRAWL_API_KEY"];
-  if (!lovableKey || !connectionKey) return null;
+  if (!connectionKey) return null;
   return {
-    Authorization: `Bearer ${lovableKey}`,
-    "X-Connection-Api-Key": connectionKey,
+    Authorization: `Bearer ${connectionKey}`,
     "Content-Type": "application/json",
   };
 }
@@ -327,7 +325,7 @@ export async function crawlSite(
         if (queue.length + pages.length > maxPages * 4) break;
         try {
           const next = new URL(match[1]!, url);
-           if (!sameSite(next, new URL(origin)) || SKIP_EXT.test(next.pathname)) continue;
+          if (!sameSite(next, new URL(origin)) || SKIP_EXT.test(next.pathname)) continue;
           const clean = `${next.origin}${next.pathname.replace(/\/$/, "")}`;
           if (!visited.has(clean) && !queue.includes(clean)) queue.push(clean);
         } catch {
