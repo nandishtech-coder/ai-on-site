@@ -23,7 +23,8 @@ export async function embedTexts(texts: string[]): Promise<number[][]> {
       body: JSON.stringify({
         requests: batch.map(text => ({
           model: EMBEDDING_MODEL,
-          content: { parts: [{ text }] }
+          content: { parts: [{ text }] },
+          outputDimensionality: 768
         }))
       }),
     });
