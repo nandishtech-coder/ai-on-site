@@ -6,3 +6,8 @@
 - [ ] Real UPI ID + QR — blocked: user enters in Payment Methods.
 - [ ] Stripe key — blocked: user will provide.
 - [ ] Live chat answers — blocked: workspace AI credits.
+- [x] Enterprise: authenticated weekly website re-sync for Enterprise bots.
+- [x] Enterprise: restrict custom bot instructions to Enterprise access.
+- [x] Enterprise: daily conversation/message analytics chart.
+- [x] Enterprise: export captured leads as CSV.
+- [ ] Publish and verify the Enterprise features on the live site.
