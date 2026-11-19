@@ -12,4 +12,5 @@
 - [x] Enterprise: export captured leads as CSV.
 - [ ] Publish and verify the Enterprise features on the live site.
 - [ ] Diagnose Vercel dashboard requests for backend settings; avoid exposing or removing privileged credentials unsafely.
+- [ ] Remove the runtime requirement for the Supabase service-role key from Vercel by using authenticated, policy-scoped operations and narrowly authorized database functions where needed.
 - [ ] Diagnose and fix the live-preview chatbot's generic failure response.
