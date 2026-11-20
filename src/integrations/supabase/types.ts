@@ -320,6 +320,59 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_add_user_credits: {
+        Args: { p_amount: number; p_user_id: string }
+        Returns: number
+      }
+      admin_cancel_subscription: {
+        Args: { p_user_id: string }
+        Returns: boolean
+      }
+      admin_list_users_with_credits: {
+        Args: never
+        Returns: {
+          bots: number
+          created_at: string
+          email: string
+          extra_credits: number
+          id: string
+          messages_used: number
+          plan: string
+        }[]
+      }
+      admin_report: { Args: never; Returns: Json }
+      admin_review_subscription: {
+        Args: { p_approve: boolean; p_request_id: string }
+        Returns: boolean
+      }
+      admin_subscription_report: { Args: never; Returns: Json }
+      admin_update_payment_settings: {
+        Args: {
+          p_qr_image: string
+          p_stripe_enabled: boolean
+          p_upi_enabled: boolean
+          p_upi_id: string
+          p_upi_name: string
+        }
+        Returns: boolean
+      }
+      begin_public_chat: {
+        Args: { p_bot_id: string; p_preview?: boolean }
+        Returns: {
+          allowed: boolean
+          conversation_id: string
+        }[]
+      }
+      get_public_catalog_chunks: {
+        Args: { p_bot_id: string }
+        Returns: {
+          content: string
+          id: string
+          title: string
+          url: string
+        }[]
+      }
+      get_public_chat_bot: { Args: { p_bot_id: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -340,6 +393,26 @@ export type Database = {
           title: string
           url: string
         }[]
+      }
+      save_public_chat_conversation: {
+        Args: {
+          p_answer: string
+          p_bot_id: string
+          p_conversation_id: string
+          p_messages: Json
+        }
+        Returns: boolean
+      }
+      save_public_lead: {
+        Args: {
+          p_bot_id: string
+          p_conversation_id: string
+          p_email: string
+          p_name: string
+          p_phone: string
+          p_question: string
+        }
+        Returns: boolean
       }
     }
     Enums: {
