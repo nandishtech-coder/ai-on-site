@@ -133,7 +133,7 @@ export function createAiGatewayContext() {
         model: openai.responses(CHAT_MODEL),
         instructions: input.system,
         messages,
-        abortSignal: input.signal,
+        ...(input.signal ? { abortSignal: input.signal } : {}),
         maxRetries: 0,
         providerOptions: {
           openai: {
