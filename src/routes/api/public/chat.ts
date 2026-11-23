@@ -114,12 +114,15 @@ export const Route = createFileRoute("/api/public/chat")({
           return json({ error: "This chatbot has reached its monthly message limit." }, 429);
         }
 
-        const { embedTexts, streamGroundedAnswer } = await import("@/lib/ai.server");
+        const { createAiGatewayContext, getSafeAiFailure } = await import("@/lib/ai.server");
         const question = [...input.messages].reverse().find((m) => m.role === "user")?.content ?? "";
 
+        let ai: ReturnType<typeof createAiGatewayContext> | null = null;
         let context = "";
         try {
-          const [embedding] = await embedTexts([question]);
+          ai = createAiGatewayContext();
+          const [embedding] = await ai.embedTexts([question]);
+          if (!embedding) throw new Error("The website search did not return a query embedding.");
           const { data: matches, error: matchError } = await supabaseAdmin.rpc("match_site_chunks", {
             p_bot_id: bot.id,
             query_embedding: JSON.stringify(embedding),
@@ -137,8 +140,8 @@ export const Route = createFileRoute("/api/public/chat")({
               .select("id, url, title, content")
               .eq("bot_id", bot.id)
               .eq("source", "crawl")
-              .or("url.ilike.%/services%,url.ilike.%/pricing%,title.ilike.%services%,title.ilike.%pricing%")
-              .limit(12);
+              .or("url.ilike.%/services%,url.ilike.%/service/%,url.ilike.%/pricing%,title.ilike.%service%,title.ilike.%pricing%")
+              .limit(30);
             if (catalogError) throw catalogError;
             for (const chunk of catalog ?? []) selected.set(chunk.id, chunk);
           }
@@ -147,10 +150,15 @@ export const Route = createFileRoute("/api/public/chat")({
             .join("\n\n---\n\n");
         } catch (error) {
           console.error("retrieval failed", error);
+          const failure = getSafeAiFailure(error, "I couldn't search the saved website data. Please try again shortly.");
+          return json({ error: failure.message }, failure.statusCode);
         }
 
+        if (!ai) return json({ error: "The chat service is unavailable. Please try again." }, 502);
+        const gateway = ai;
+
         const system = [
-          `You are an AI support assistant for ${bot.name}. Answer strictly using the following website context: ${context || "(no context found)"}. If unknown, politely offer to collect their contact info.`,
+          `You are an AI support assistant for ${bot.name}. For greetings, respond warmly and invite website questions. For factual questions, answer strictly using the following website context: ${context || "(no context found)"}. If unknown, politely offer to collect their contact info.`,
           bot.system_prompt ? `Additional instructions from the site owner: ${bot.system_prompt}` : "",
           "Reply in the same language the visitor writes in. Use plain text. When asked about services or prices, list the actual service names and exact prices shown in the website context, including 'onwards' or other qualifications. Do not claim prices are unavailable when they are present in the context, and never invent prices.",
         ]
@@ -172,20 +180,16 @@ export const Route = createFileRoute("/api/public/chat")({
           async start(controller) {
             let answer = "";
             try {
-              for await (const delta of streamGroundedAnswer({ system, messages: input.messages })) {
+              for await (const delta of gateway.streamGroundedAnswer({ system, messages: input.messages, signal: request.signal })) {
                 answer += delta;
                 controller.enqueue(encoder.encode(delta));
               }
             } catch (error) {
               console.error("chat failed", error);
-              const noCredits = /\[402\]|\[403\]/.test(String((error as Error)?.message));
-              const fallback = answer
-                ? ""
-                : noCredits
-                  ? "This assistant is temporarily unavailable. Please leave your contact details or try again later."
-                  : "Sorry, I'm having trouble answering right now. Please try again shortly.";
-              answer += fallback;
-              if (fallback) controller.enqueue(encoder.encode(fallback));
+              const failure = getSafeAiFailure(error, "I couldn't generate a reply just now. Please try again shortly.");
+              const suffix = answer ? `\n\n${failure.message}` : failure.message;
+              answer += suffix;
+              controller.enqueue(encoder.encode(suffix));
             }
             try {
               await supabaseAdmin
